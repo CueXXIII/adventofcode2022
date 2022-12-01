@@ -14,7 +14,7 @@ int main(int, char **argv) {
             if (line.size() == 0) {
                 break;
             }
-            currentCalories += stol(line);
+            currentCalories += std::stol(line);
         }
         fmt::print("{}\n", currentCalories);
         calories.push_back(currentCalories);
