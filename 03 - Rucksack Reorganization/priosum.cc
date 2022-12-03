@@ -1,6 +1,5 @@
 #include <fmt/format.h>
 #include <fstream>
-#include <iostream>
 #include <ranges>
 #include <set>
 
@@ -13,7 +12,7 @@ int64_t itemPrio(char item) {
     if (item >= 'A' and item <= 'Z') {
         return item - 'A' + 27;
     }
-    std::cout << "invalid item " << item << '\n';
+    fmt::print("invalid item {}\n", item);
     return -1;
 }
 
