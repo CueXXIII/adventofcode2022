@@ -26,9 +26,7 @@ int main(int, char **argv) {
         }
 
         // part 2
-        if ((range1s <= range2s and range2s <= range1e) or
-            (range1s <= range2e and range2e <= range1e) or
-            (range2s <= range1s and range2e >= range1e)) {
+        if (not(range1s > range2e or range2s > range1e)) {
             ++partialOverlaps;
         }
     }
