@@ -52,8 +52,8 @@ class SimpleParser {
     bool skipToken(const std::string &);
 };
 
-SimpleParser::SimpleParser(std::ifstream &in)
-    : in(in), buffer(""), pos(0), eof(false) {
+SimpleParser::SimpleParser(std::ifstream &stream)
+    : in(stream), buffer(""), pos(0), eof(false) {
     bufferSaturate();
 }
 
