@@ -5,6 +5,7 @@
 #include <string>
 
 class SimpleParser {
+    std::ifstream localStream{};
     std::ifstream &in;
 
     // buffer will always contain at least 1 char, or eof==true
@@ -41,6 +42,7 @@ class SimpleParser {
 
   public:
     SimpleParser(std::ifstream &);
+    SimpleParser(const char *);
 
     bool isEof() const;
 
@@ -54,6 +56,11 @@ class SimpleParser {
 
 SimpleParser::SimpleParser(std::ifstream &stream)
     : in(stream), buffer(""), pos(0), eof(false) {
+    bufferSaturate();
+}
+
+SimpleParser::SimpleParser(const char *infile)
+    : localStream(std::ifstream(infile)), in(localStream), buffer(""), pos(0), eof(false) {
     bufferSaturate();
 }
 

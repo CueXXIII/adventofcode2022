@@ -1,12 +1,9 @@
 #include <fmt/format.h>
-#include <fstream>
-#include <string>
 
 #include "simpleparser.hpp"
 
 int main(int, char **argv) {
-    std::ifstream infile{argv[1]};
-    SimpleParser assigns{infile};
+    SimpleParser assigns{argv[1]};
     int64_t overlapCounter = 0;
     int64_t partialOverlaps = 0;
     while (!assigns.isEof()) {
