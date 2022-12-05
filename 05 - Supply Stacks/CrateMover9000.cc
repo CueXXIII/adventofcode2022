@@ -26,10 +26,11 @@ int main(int, char **argv) {
     std::string line;
 
     std::getline(infile, line);
-    const auto numCrates = (line.size() + 1) / 4;
-    cargoHold.resize(numCrates);
-
     do {
+        const auto numCrates = (line.size() + 1) / 4;
+        if (cargoHold.size() < numCrates) {
+            cargoHold.resize(numCrates);
+        }
         for (const auto i : iota(0u, numCrates)) {
             if (line[i * 4] == '[') {
                 cargoHold[i].push(line[i * 4 + 1]);
