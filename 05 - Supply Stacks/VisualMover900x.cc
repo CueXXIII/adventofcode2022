@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cstddef>
+#include <cstdlib>
 #include <fmt/format.h>
 #include <fstream>
 #include <ranges>
@@ -67,8 +68,8 @@ class Storage {
         for (const auto num : iota(0u, hold.size())) {
             fmt::print(" {}  ", num + 1);
         }
-        fmt::print("\n\n");
-        fmt::print("{}\n\n", moveDescription);
+        fmt::print("\n\x1b[K\n");
+        fmt::print("\x1b[K{}\n\n", moveDescription);
     };
 
     void printTopCrates() const {
@@ -132,18 +133,18 @@ class Crane {
     virtual void move(size_t, size_t, size_t) = 0;
 };
 
-class Crane9000 : public Crane {
+class CrateMover9000 : public Crane {
   public:
-    Crane9000(Storage &s) : Crane(s) {}
+    CrateMover9000(Storage &s) : Crane(s) {}
     virtual void move(size_t amount, size_t src, size_t dst) override {
         for ([[maybe_unused]] const auto i : iota(0u, amount)) {
             // get crate
             const auto crate = hold[src].back();
             hold[src].pop_back();
 
-            animateMove({crate}, src, dst,
-                        fmt::format("\x1b[Kmove {} from {} to {}", amount,
-                                    src + 1, dst + 1));
+            animateMove(
+                {crate}, src, dst,
+                fmt::format("move {} from {} to {}", amount, src + 1, dst + 1));
 
             // put crate back
             hold[dst].push_back(crate);
@@ -151,7 +152,36 @@ class Crane9000 : public Crane {
     }
 };
 
-int main(int, char **argv) {
+class CrateMover9001 : public Crane {
+  public:
+    CrateMover9001(Storage &s) : Crane(s) {}
+    virtual void move(size_t amount, size_t src, size_t dst) override {
+        // get crate
+        std::vector<char> lift{};
+        for ([[maybe_unused]] const auto i : iota(0u, amount)) {
+            lift.push_back(hold[src].back());
+            hold[src].pop_back();
+        }
+
+        animateMove(
+            lift, src, dst,
+            fmt::format("move {} from {} to {}", amount, src + 1, dst + 1));
+
+        // put crate back
+        for ([[maybe_unused]] const auto i : iota(0u, amount)) {
+            hold[dst].push_back(lift.back());
+            lift.pop_back();
+        }
+    }
+};
+
+int main(int argc, char **argv) {
+    if (argc != 3) {
+        fmt::print("Usage: {} inputfile 9000|9001\n", argv[0]);
+        std::exit(EXIT_FAILURE);
+    }
+    const auto version = std::stol(argv[2]);
+
     Storage ship{};
 
     std::ifstream infile{argv[1]};
@@ -171,7 +201,19 @@ int main(int, char **argv) {
     ship.printStorage();
     delayAnimation();
 
-    Crane9000 crane9000{ship};
+    Crane *crane = nullptr;
+    switch (version) {
+    case 9000:
+        crane = new CrateMover9000(ship);
+        break;
+    case 9001:
+        crane = new CrateMover9001(ship);
+        break;
+    default:
+        fmt::print("Usage: {} inputfile 9000|9001\n", argv[0]);
+        std::exit(EXIT_FAILURE);
+    }
+
     SimpleParser moves{infile};
     while (!moves.isEof()) {
         moves.skipToken("move");
@@ -181,7 +223,6 @@ int main(int, char **argv) {
         moves.skipToken("to");
         const auto dst = moves.getInt64() - 1;
 
-        crane9000.move(num, src, dst);
+        crane->move(num, src, dst);
     }
-    ship.printTopCrates();
 }
