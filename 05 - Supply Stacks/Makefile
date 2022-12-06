@@ -1,4 +1,4 @@
-SRC=CrateMover9000.cc CrateMover9001.cc VisualMover9000.cc
+SRC=CrateMover9000.cc CrateMover9001.cc VisualMover900x.cc
 
 CPPFLAGS=-I../common
 CXXFLAGS=-std=c++20 -O3 -flto -Wall -Wextra -Wpedantic -Wconversion -Wshadow  -g -ggdb
