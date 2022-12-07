@@ -63,11 +63,24 @@ struct Directory : public Node {
         entries[dir->name] = dir;
         dir->parent = this;
     }
+
+    struct iterator {
+        decltype(entries)::iterator it;
+        iterator(decltype(entries) &e) : it(e.begin()) {}
+        bool operator==(auto end) { return it == end; }
+        iterator &operator++() {
+            ++it;
+            return *this;
+        }
+        Node *operator*() { return it->second; }
+    };
+    iterator begin() { return {entries}; }
+    auto end() const { return entries.end(); }
 };
 
 void ls(Directory *dir, const std::string prefix = "") {
     fmt::print("{}- {} (dir)\n", prefix, dir->name);
-    for (const auto &[_, node] : dir->entries) {
+    for (const auto node : *dir) {
         if (node->isDirectory) {
             ls(static_cast<Directory *>(node), prefix + "  ");
         } else {
@@ -77,13 +90,13 @@ void ls(Directory *dir, const std::string prefix = "") {
     }
 }
 
-size_t sum100k(const Directory *dir) {
+size_t sum100k(Directory *dir) {
     size_t total = 0;
     const size_t current = dir->getSize();
     if (current <= 100000) {
         total += current;
     }
-    for (const auto &[_, node] : dir->entries) {
+    for (auto node : *dir) {
         if (node->isDirectory) {
             total += sum100k(static_cast<Directory *>(node));
         }
@@ -91,13 +104,13 @@ size_t sum100k(const Directory *dir) {
     return total;
 }
 
-size_t removalCandidate(const Directory *dir, const size_t minSize) {
+size_t removalCandidate(Directory *dir, const size_t minSize) {
     size_t min = std::numeric_limits<size_t>::max();
     const size_t current = dir->getSize();
     if (current >= minSize) {
         min = current;
     }
-    for (const auto &[_, node] : dir->entries) {
+    for (auto node : *dir) {
         if (node->isDirectory) {
             min = std::min(
                 min, removalCandidate(static_cast<Directory *>(node), minSize));
