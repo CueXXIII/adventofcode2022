@@ -12,6 +12,7 @@ struct Node {
     const bool isDirectory = false;
 
     Node(const std::string &name, bool dir) : name(name), isDirectory(dir) {}
+    virtual ~Node() = default;
     virtual size_t getSize() const = 0;
 };
 
@@ -23,6 +24,7 @@ struct File : public Node {
 
     File(const std::string &name, size_t size)
         : Node(name, false), size(size) {}
+    virtual ~File() override = default;
     virtual size_t getSize() const override { return size; }
 };
 
@@ -31,6 +33,11 @@ struct Directory : public Node {
     Directory *parent = nullptr;
 
     Directory(const std::string &name) : Node(name, true) {}
+    virtual ~Directory() override {
+        for (const auto &[_, node] : entries) {
+            delete node;
+        }
+    }
     virtual size_t getSize() const override {
         size_t total = 0;
         for (const auto &[name, node] : entries) {
@@ -164,4 +171,6 @@ int main(int, char **argv) {
 
     fmt::print("Delete a directory continig {} bytes\n",
                removalCandidate(root, required));
+
+    delete root;
 }
