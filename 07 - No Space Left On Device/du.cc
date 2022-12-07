@@ -1,5 +1,7 @@
+#include <algorithm>
 #include <fmt/format.h>
 #include <fstream>
+#include <limits>
 #include <map>
 #include <string>
 
@@ -75,9 +77,9 @@ void ls(Directory *dir, const std::string prefix = "") {
     }
 }
 
-size_t sum100k(Directory *dir) {
+size_t sum100k(const Directory *dir) {
     size_t total = 0;
-    size_t current = dir->getSize();
+    const size_t current = dir->getSize();
     if (current <= 100000) {
         total += current;
     }
@@ -87,6 +89,21 @@ size_t sum100k(Directory *dir) {
         }
     }
     return total;
+}
+
+size_t removalCandidate(const Directory *dir, const size_t minSize) {
+    size_t min = std::numeric_limits<size_t>::max();
+    const size_t current = dir->getSize();
+    if (current >= minSize) {
+        min = current;
+    }
+    for (const auto &[_, node] : dir->entries) {
+        if (node->isDirectory) {
+            min = std::min(
+                min, removalCandidate(static_cast<Directory *>(node), minSize));
+        }
+    }
+    return min;
 }
 
 int main(int, char **argv) {
@@ -128,4 +145,10 @@ int main(int, char **argv) {
     fmt::print("\n");
     fmt::print("The sum of small (<=100000) directories is {}\n",
                sum100k(root));
+
+    const size_t free = 70000000 - root->getSize();
+    const size_t required = 30000000 - free;
+
+    fmt::print("Delete a directory continig {} bytes\n",
+               removalCandidate(root, required));
 }
