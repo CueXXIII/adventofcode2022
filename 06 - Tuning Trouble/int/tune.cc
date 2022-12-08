@@ -62,11 +62,12 @@ int main(int argc, char **argv) {
     }
 
     auto parse = std::chrono::high_resolution_clock::now();
-    
-    for (const auto position : iota(0, prefixLength-1)) {
+
+    for (const auto position : iota(0, prefixLength - 1)) {
         window.push(message, position);
     }
-    for (const auto position : iota(prefixLength-1, (int64_t)message.size())) {
+    for (const auto position :
+         iota(prefixLength - 1, (int64_t)message.size())) {
         window.push(message, position);
         if (window.isUnique()) {
             fmt::print("Unique marker at {}\n", window.charCount);
@@ -76,6 +77,14 @@ int main(int argc, char **argv) {
 
     auto solve = std::chrono::high_resolution_clock::now();
 
-    fmt::print("Time for parsing: {} ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(parse-startTime).count());
-    fmt::print("Time for solving: {} ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(solve-parse).count());
+    fmt::print("Time for parsing: {:.4f} ms\n",
+               std::chrono::duration_cast<std::chrono::duration<double>>(
+                   parse - startTime)
+                       .count() *
+                   1000.);
+    fmt::print(
+        "Time for solving: {:4f} ms\n",
+        std::chrono::duration_cast<std::chrono::duration<double>>(solve - parse)
+                .count() *
+            1000.);
 }
