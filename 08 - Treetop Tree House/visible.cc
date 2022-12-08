@@ -4,56 +4,20 @@
 #include <string>
 #include <vector>
 
+#include "scanlocations.hpp"
+#include "vec2.hpp"
+
 using std::views::iota;
 
-bool seeUp(const auto &field, [[maybe_unused]] auto h, [[maybe_unused]] auto w,
-           auto x, auto y) {
-    const auto tree = field[y][x];
-    --y;
-    while (y >= 0) {
-        if (field[y][x] >= tree) {
+bool see(const auto &field, const Vec2l field_limit, Vec2l position,
+         const Vec2l direction) {
+    const auto tree = field[position.y][position.x];
+    position += direction;
+    for (const auto look :
+         ScanLocations(position, direction, {0, 0}, field_limit)) {
+        if (field[look.y][look.x] >= tree) {
             return false;
         }
-        --y;
-    }
-    return true;
-}
-
-bool seeDown(const auto &field, [[maybe_unused]] auto h,
-             [[maybe_unused]] auto w, auto x, auto y) {
-    const auto tree = field[y][x];
-    ++y;
-    while (y < h) {
-        if (field[y][x] >= tree) {
-            return false;
-        }
-        ++y;
-    }
-    return true;
-}
-
-bool seeLeft(const auto &field, [[maybe_unused]] auto h,
-             [[maybe_unused]] auto w, auto x, auto y) {
-    const auto tree = field[y][x];
-    --x;
-    while (x >= 0) {
-        if (field[y][x] >= tree) {
-            return false;
-        }
-        --x;
-    }
-    return true;
-}
-
-bool seeRight(const auto &field, [[maybe_unused]] auto h,
-              [[maybe_unused]] auto w, auto x, auto y) {
-    const auto tree = field[y][x];
-    ++x;
-    while (x < w) {
-        if (field[y][x] >= tree) {
-            return false;
-        }
-        ++x;
     }
     return true;
 }
@@ -69,14 +33,15 @@ int main(int, char **argv) {
 
     const int64_t height = (int64_t)field.size();
     const int64_t width = (int64_t)field[0].size();
+    const Vec2l limit{width - 1, height - 1};
 
     int64_t visible = 0;
     for (const auto x : iota(0, width)) {
         for (const auto y : iota(0, height)) {
-            if (seeUp(field, height, width, x, y) or
-                seeDown(field, height, width, x, y) or
-                seeLeft(field, height, width, x, y) or
-                seeRight(field, height, width, x, y)) {
+            if (see(field, limit, {x, y}, {0, -1}) or
+                see(field, limit, {x, y}, {0, 1}) or
+                see(field, limit, {x, y}, {-1, 0}) or
+                see(field, limit, {x, y}, {1, 0})) {
                 ++visible;
             }
         }

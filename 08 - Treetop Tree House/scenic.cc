@@ -4,64 +4,22 @@
 #include <string>
 #include <vector>
 
+#include "scanlocations.hpp"
+#include "vec2.hpp"
+
 using std::views::iota;
 
-int64_t scoreUp(const auto &field, [[maybe_unused]] auto h,
-                [[maybe_unused]] auto w, auto x, auto y) {
-    const auto tree = field[y][x];
+int64_t score(const auto &field, const Vec2l field_limit, Vec2l position,
+              const Vec2l direction) {
+    const auto tree = field[position.y][position.x];
     int64_t score = 0;
-    --y;
-    while (y >= 0) {
+    position += direction;
+    for (const auto look :
+         ScanLocations(position, direction, {0, 0}, field_limit)) {
         ++score;
-        if (field[y][x] >= tree) {
+        if (field[look.y][look.x] >= tree) {
             break;
         }
-        --y;
-    }
-    return score;
-}
-
-int64_t scoreDown(const auto &field, [[maybe_unused]] auto h,
-                  [[maybe_unused]] auto w, auto x, auto y) {
-    const auto tree = field[y][x];
-    int64_t score = 0;
-    ++y;
-    while (y < h) {
-        ++score;
-        if (field[y][x] >= tree) {
-            break;
-        }
-        ++y;
-    }
-    return score;
-}
-
-int64_t scoreLeft(const auto &field, [[maybe_unused]] auto h,
-                  [[maybe_unused]] auto w, auto x, auto y) {
-    const auto tree = field[y][x];
-    int64_t score = 0;
-    --x;
-    while (x >= 0) {
-        ++score;
-        if (field[y][x] >= tree) {
-            break;
-        }
-        --x;
-    }
-    return score;
-}
-
-int64_t scoreRight(const auto &field, [[maybe_unused]] auto h,
-                   [[maybe_unused]] auto w, auto x, auto y) {
-    const auto tree = field[y][x];
-    int64_t score = 0;
-    ++x;
-    while (x < w) {
-        ++score;
-        if (field[y][x] >= tree) {
-            break;
-        }
-        ++x;
     }
     return score;
 }
@@ -77,23 +35,24 @@ int main(int, char **argv) {
 
     const int64_t height = (int64_t)field.size();
     const int64_t width = (int64_t)field[0].size();
+    const Vec2l limit{width - 1, height - 1};
 
-    int64_t score = 0;
+    int64_t minScore = 0;
     int64_t mx = 0, my = 0;
     for (const auto x : iota(0, width)) {
         for (const auto y : iota(0, height)) {
-            const auto localScore = scoreUp(field, height, width, x, y) *
-                                    scoreDown(field, height, width, x, y) *
-                                    scoreLeft(field, height, width, x, y) *
-                                    scoreRight(field, height, width, x, y);
-            if (score < localScore) {
+            const auto localScore = score(field, limit, {x, y}, {0, -1}) *
+                                    score(field, limit, {x, y}, {0, 1}) *
+                                    score(field, limit, {x, y}, {-1, 0}) *
+                                    score(field, limit, {x, y}, {1, 0});
+            if (minScore < localScore) {
                 mx = x;
                 my = y;
-                score = localScore;
+                minScore = localScore;
             }
         }
     }
 
     fmt::print("Build the treehouse at ({}, {}) {}/10 scenic score\n", mx, my,
-               score);
+               minScore);
 }
