@@ -1,3 +1,7 @@
+#pragma once
+
+#include <iterator>
+
 #include "vec2.hpp"
 #include "vec3.hpp"
 
@@ -15,6 +19,12 @@ template <typename VEC> class ScanLocations {
 
     class sentinel {};
     class iterator {
+        using iterator_category = std::input_iterator_tag;
+        using difference_type = std::ptrdiff_t;
+        using pointer = VEC *;
+        using reference = VEC &;
+        using value_type = VEC;
+
         VEC current;
         const ScanLocations &limits;
 
