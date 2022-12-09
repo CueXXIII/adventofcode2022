@@ -79,10 +79,13 @@ void printVisited(const auto &visited) {
 }
 
 int main(int argc, char **argv) {
-    if (argc != 2) {
-        std::cerr << "Usage: " << argv[0] << " <input.txt>\n";
+    if (argc < 2) {
+        std::cerr << "Usage: " << argv[0]
+                  << " <input.txt> [--view=part1|part2]\n";
         std::exit(EXIT_FAILURE);
     }
+
+    const std::string showPart = (argc == 3) ? argv[2] : "";
 
     Rope rope{};
 
@@ -93,9 +96,13 @@ int main(int argc, char **argv) {
         rope.move(direction, steps);
     }
     fmt::print("The second knot visited {} locations\n", visited1.size());
-    // printVisited(visited1);
-    fmt::print("The last knot visited {} locations\n", visited9.size());
-    // printVisited(visited9);
+    if (showPart == "--view=part1") {
+        printVisited(visited1);
+    }
+    fmt::print("The 10th knot visited {} locations\n", visited9.size());
+    if (showPart == "--view=part2") {
+        printVisited(visited9);
+    }
     fmt::print("With at least {} knots the last one would not be moving\n",
                rope.knots.size());
 }
