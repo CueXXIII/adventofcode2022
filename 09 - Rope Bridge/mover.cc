@@ -30,8 +30,8 @@ struct Rope {
 
     bool stepTail(const auto &head, auto &tail) {
         const auto difference = head - tail;
-        if (std::abs(difference.x) > 1 or std::abs(difference.y) > 1) {
-            const Vec2l moveStep = {signum(difference.x), signum(difference.y)};
+        const Vec2l moveStep = {signum(difference.x), signum(difference.y)};
+        if (difference != moveStep) {
             tail += moveStep;
             return true;
         }
