@@ -13,8 +13,8 @@
 
 using std::views::iota;
 
-std::unordered_set<Vec2l> visited1{};
-std::unordered_set<Vec2l> visited9{};
+std::unordered_set<Vec2l> visited1{{0, 0}};
+std::unordered_set<Vec2l> visited9{{0, 0}};
 
 static const std::map<std::string, Vec2l> directions{
     {"R", {1, 0}}, {"L", {-1, 0}}, {"U", {0, -1}}, {"D", {0, 1}}};
@@ -24,9 +24,9 @@ template <typename T> static constexpr T signum(const T num) {
 }
 
 struct Rope {
-    std::vector<Vec2l> knots{};
+    std::vector<Vec2l> knots{{0, 0}};
 
-    Rope() { knots.resize(10, {0, 0}); }
+    Rope() {}
 
     bool stepTail(const auto &head, auto &tail) {
         const auto difference = head - tail;
@@ -42,13 +42,17 @@ struct Rope {
         const auto &direction = directions.at(directionName);
         for ([[maybe_unused]] const auto _ : iota(0, steps)) {
             knots[0] += direction;
-            for (const auto headNo : iota(0, 9)) {
+            for (const auto headNo : iota(0, (int64_t)knots.size() - 1)) {
                 if (!stepTail(knots[headNo], knots[headNo + 1])) {
                     break;
                 }
             }
+            if (knots.back() != Vec2l{0, 0}) {
+                knots.emplace_back(0, 0);
+            }
             visited1.insert(knots[1]);
-            visited9.insert(knots[9]);
+            if (knots.size() >= 10)
+                visited9.insert(knots[9]);
         }
     }
 };
@@ -92,4 +96,6 @@ int main(int argc, char **argv) {
     // printVisited(visited1);
     fmt::print("The last knot visited {} locations\n", visited9.size());
     // printVisited(visited9);
+    fmt::print("With at least {} knots the last one would not be moving\n",
+               rope.knots.size());
 }
