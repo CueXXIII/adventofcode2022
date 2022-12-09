@@ -52,6 +52,24 @@ template <typename num> struct std::hash<Vec3<num>> {
     }
 };
 
+// from https://fmt.dev/latest/api.html#format-api
+template <typename num> struct fmt::formatter<Vec2<num>> {
+    // parse format specifier "...{:3.14f}..." is passed as "3.14f}..."
+    // and it must advance to the }
+    // TODO: save custom format and use them for all values
+    constexpr auto parse(format_parse_context &ctx) -> decltype(ctx.begin()) {
+        auto it = ctx.begin(), end = ctx.end();
+        if (it != end && *it != '}')
+            throw format_error("invalid format");
+        return it;
+    }
+    template <typename FormatContext>
+    auto format(const Vec2<num> &vec, FormatContext &ctx) const
+        -> decltype(ctx.out()) {
+        return fmt::format_to(ctx.out(), "({}, {}, {})", vec.x, vec.y, vec.z);
+    }
+};
+
 using Vec3i = Vec3<int32_t>;
 using Vec3l = Vec3<int64_t>;
 using Vec3z = Vec3<size_t>;
