@@ -22,7 +22,7 @@ cd "$puzzle"
 touch example.txt
 vi example.txt
 
-git add Makefile "$obj.cc" example.txt
+git add Makefile example.txt
 git commit -m "day $day skeleton"
 
 gvim $obj.cc
