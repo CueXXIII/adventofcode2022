@@ -45,6 +45,17 @@ struct ALU {
         }
     }
 
+    void paint() {
+        if (std::abs(x - (cycle - 1) % 40) < 2) {
+            std::cout << "☃";
+        } else {
+            std::cout << ' ';
+        }
+        if (cycle % 40 == 0) {
+            std::cout << '\n';
+        }
+    }
+
     void step() {
         if (state == empty) {
             fetchOp();
@@ -52,8 +63,9 @@ struct ALU {
         ++cycle;
         if ((cycle == 20 or (cycle % 40) == 20) and cycle <= 220) {
             signal += x * cycle;
-            fmt::print("Step {} has signal {}\n", cycle, x * cycle);
+            // fmt::print("Step {} has signal {}\n", cycle, x * cycle);
         }
+        paint();
         --busy;
         if (busy == 0) {
             if (state == addx) {
