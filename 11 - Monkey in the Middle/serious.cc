@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 #include <fmt/format.h>
 #include <fstream>
 #include <iostream>
@@ -18,6 +19,7 @@ struct Monkey {
 
     int64_t id{};
     std::vector<int64_t> items{};
+    std::vector<long double> worries{};
     enum { add, mul, square } op{};
     int64_t opArg{};
     int64_t divTest{};
@@ -34,7 +36,9 @@ struct Monkey {
         // Starting items: 79, 98
         input.skipToken("Starting items:");
         do {
-            items.push_back(input.getInt64());
+            const auto worry = input.getInt64();
+            items.push_back(worry);
+            worries.push_back(std::log10(worry));
         } while (input.skipChar(','));
         // Operation: new = old * 19
         input.skipToken("Operation: new = old");
@@ -74,6 +78,16 @@ struct Monkey {
         fmt::print("\n");
     }
 
+    void printWorriesList() const {
+        if (worries.size() > 0) {
+            fmt::print("{}", worries[0]);
+            for (const auto worry : worries | std::views::drop(1)) {
+                fmt::print(", {}", worry);
+            }
+        }
+        fmt::print("\n");
+    }
+
     void print() const {
         fmt::print("Monkey {}:\n", id);
         fmt::print("  Starting items: ");
@@ -94,6 +108,11 @@ struct Monkey {
         printItemList();
     }
 
+    void printWorries() const {
+        fmt::print("Monkey {} (log10): ", id);
+        printWorriesList();
+    }
+
     void changeWorry(int64_t &item) {
         switch (op) {
         case add:
@@ -108,23 +127,47 @@ struct Monkey {
         }
     }
 
+    void changeLogWorry(long double &item) {
+        switch (op) {
+        case add:
+            // would the add be noticeable in the representation?
+            if (item < 23.) {
+                item = std::log10(std::pow(10, item) + opArg);
+            }
+            break;
+        case mul:
+            item += std::log10(opArg);
+            break;
+        case square:
+            item *= 2;
+            break;
+        }
+    }
+
     void turn() {
-        for (auto item : items) {
+        for (const auto i : iota(0u, items.size())) {
+            auto &item = items[i];
+            auto &worry = worries[i];
+
             ++inspections;
             // fmt::print("  Monkey inspects an item with a worry level of
             // {}.\n", item);
             changeWorry(item);
+            changeLogWorry(worry);
             // fmt::print("  Worry level is changed to {}.\n", item);
             item %= globalDivisor; // keep worry levels manageable
             // fmt::print("  Monkey gets bored with item. Worry level is divided
             // by 3 to {}\n", item);
             if (item % divTest == 0) {
                 myFlock[trueMonkey].items.push_back(item);
+                myFlock[trueMonkey].worries.push_back(worry);
             } else {
                 myFlock[falseMonkey].items.push_back(item);
+                myFlock[falseMonkey].worries.push_back(worry);
             }
         }
         items.clear();
+        worries.clear();
     }
 };
 
@@ -151,8 +194,9 @@ int main(int argc, char **argv) {
         if (n == 1 or n == 20 or (n % 1000) == 0) {
             fmt::print("== After round {} ==\n", n);
             for (const auto &monkey : flock) {
-                fmt::print("Monkey {} inspected items {} times.\n", monkey.id,
-                           monkey.inspections);
+                monkey.printWorries();
+                // fmt::print("Monkey {} inspected items {} times.\n",
+                // monkey.id, monkey.inspections);
             }
             fmt::print("\n");
         }
