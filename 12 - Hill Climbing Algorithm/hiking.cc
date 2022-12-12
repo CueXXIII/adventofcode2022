@@ -31,9 +31,10 @@ void printDistmap() {
     fmt::print("\n");
 }
 
-int64_t fillDistmap() {
+std::pair<int64_t, int64_t> fillDistmap() {
     distmap[endPos.y][endPos.x] = 0;
     int64_t step = 1;
+    int64_t hikingStep = 0;
     while (true) {
         for (const auto y : iota(0u, mapSize.y)) {
             for (const auto x : iota(0u, mapSize.x)) {
@@ -51,9 +52,13 @@ int64_t fillDistmap() {
                     }
                     if (heightmap[dst.y][dst.x] + 1 >= heightmap[y][x]) {
                         distmap[dst.y][dst.x] = step;
-                        if (heightmap[dst.y][dst.x] == 'a') {
+                        if (heightmap[dst.y][dst.x] == 'a' and
+                            hikingStep == 0) {
+                            hikingStep = step;
                             fmt::print("Hiking start point {}\n", dst);
-                            return step;
+                        }
+                        if (dst == startPos) {
+                            return {step, hikingStep};
                         }
                     }
                 }
@@ -90,8 +95,9 @@ int main(int argc, char **argv) {
         distmap[y - 1].resize(line.size(), -1);
     }
     mapSize = {heightmap.front().size(), y};
-    fmt::print("map {}\n", mapSize);
 
-    fmt::print("It takes {} steps from the hiking start\n", fillDistmap());
+    const auto [part1, part2] = fillDistmap();
     // printDistmap();
+    fmt::print("It takes {} steps to the top\n", part1);
+    fmt::print("It takes {} steps from the hiking start\n", part2);
 }

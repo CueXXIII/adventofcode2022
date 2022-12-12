@@ -1,7 +1,7 @@
 SRC=
 
 CPPFLAGS=-I../common
-CXXFLAGS=-std=c++20 -O3 -flto -Wall -Wextra -Wpedantic -Wconversion -Wshadow=local  -g -ggdb
+CXXFLAGS=-std=c++20 -O3 -flto=auto -Wall -Wextra -Wpedantic -Wconversion -Wshadow=local  -g -ggdb
 LDLIBS=-lfmt
 
 OBJ=$(SRC:.cc=.o)
