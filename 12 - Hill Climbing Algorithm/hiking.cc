@@ -6,7 +6,6 @@
 #include <string>
 #include <vector>
 
-#include "simpleparser.hpp"
 #include "vec2.hpp"
 
 using std::views::iota;
