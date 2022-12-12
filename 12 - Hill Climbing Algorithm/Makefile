@@ -1,4 +1,4 @@
-SRC=climb.cc
+SRC=climb.cc hiking.cc
 
 CPPFLAGS=-I../common
 CXXFLAGS=-std=c++20 -O3 -flto -Wall -Wextra -Wpedantic -Wconversion -Wshadow=local  -g -ggdb
