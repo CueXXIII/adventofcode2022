@@ -12,17 +12,13 @@
 
 using std::views::iota;
 
-struct Value {
-    std::variant<int64_t, std::vector<Value>> data{};
-    // Value(const int64_t val) : data(val) {}
-    // Value(std::vector<Value> val) : data(val) {}
-};
+struct Value : public std::variant<int64_t, std::vector<Value>> {};
 
 void printValue(const Value &val) {
-    if (val.data.index() == 0) {
-        fmt::print("{}", std::get<0>(val.data));
+    if (val.index() == 0) {
+        fmt::print("{}", std::get<0>(val));
     } else {
-        const auto data = std::get<1>(val.data);
+        const auto data = std::get<1>(val);
         fmt::print("[");
         if (data.size() > 0) {
             printValue(data[0]);
@@ -36,19 +32,19 @@ void printValue(const Value &val) {
 }
 
 bool operator<(const Value &left, const Value &right) {
-    if (left.data.index() == 0) {
-        if (right.data.index() == 0) {
-            return std::get<0>(left.data) < std::get<0>(right.data);
+    if (left.index() == 0) {
+        if (right.index() == 0) {
+            return std::get<0>(left) < std::get<0>(right);
         } else {
-            return Value{std::vector<Value>{{std::get<0>(left.data)}}} < right;
+            return Value{std::vector<Value>{left}} < right;
         }
     } else {
-        if (right.data.index() == 0) {
-            return left < Value{std::vector<Value>{{std::get<0>(right.data)}}};
+        if (right.index() == 0) {
+            return left < Value{std::vector<Value>{right}};
         } else {
-            const auto &lv = std::get<1>(left.data);
-            const auto &rv = std::get<1>(right.data);
-            for (size_t pos = 0; pos < lv.size(); ++pos) {
+            const auto &lv = std::get<1>(left);
+            const auto &rv = std::get<1>(right);
+            for (const auto pos : iota(0u, lv.size())) {
                 if (pos >= rv.size()) {
                     return false;
                 }
@@ -75,9 +71,9 @@ std::vector<Value> readList(SimpleParser &scanner) {
     std::vector<Value> result{};
     while (!scanner.skipChar(']')) {
         if (scanner.skipChar('[')) {
-            result.emplace_back(readList(scanner));
+            result.push_back({readList(scanner)});
         } else {
-            result.emplace_back(scanner.getInt64());
+            result.push_back({scanner.getInt64()});
         }
         scanner.skipChar(',');
     }
