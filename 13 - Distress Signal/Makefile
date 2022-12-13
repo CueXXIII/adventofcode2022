@@ -1,8 +1,7 @@
 SRC=issorted.cc
 
-CXX=clang++-16
 CPPFLAGS=-I../common
-CXXFLAGS=-std=c++20 -O3 -flto=auto -Wall -Wextra -Wpedantic -Wconversion -Wshadow  -g -ggdb
+CXXFLAGS=-std=c++20 -O3 -flto=auto -Wall -Wextra -Wpedantic -Wconversion -Wshadow=local  -g -ggdb
 LDLIBS=-lfmt
 
 OBJ=$(SRC:.cc=.o)

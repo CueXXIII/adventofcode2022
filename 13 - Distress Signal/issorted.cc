@@ -31,40 +31,36 @@ void printValue(const Value &val) {
     }
 }
 
-bool operator<(const Value &left, const Value &right) {
+auto operator<=>(const Value &left, const Value &right) {
     if (left.index() == 0) {
         if (right.index() == 0) {
-            return std::get<0>(left) < std::get<0>(right);
+            return std::get<0>(left) <=> std::get<0>(right);
         } else {
-            return Value{std::vector<Value>{left}} < right;
+            return Value{std::vector<Value>{left}} <=> right;
         }
     } else {
         if (right.index() == 0) {
-            return left < Value{std::vector<Value>{right}};
+            return left <=> Value{std::vector<Value>{right}};
         } else {
             const auto &lv = std::get<1>(left);
             const auto &rv = std::get<1>(right);
             for (const auto pos : iota(0u, lv.size())) {
                 if (pos >= rv.size()) {
-                    return false;
+                    return std::strong_ordering::greater;
                 }
                 if (lv[pos] < rv[pos]) {
-                    return true;
+                    return std::strong_ordering::less;
                 }
                 if (rv[pos] < lv[pos]) {
-                    return false;
+                    return std::strong_ordering::greater;
                 }
             }
             if (rv.size() == lv.size()) {
-                return false;
+                return std::strong_ordering::equal;
             }
-            return true;
+            return std::strong_ordering::less;
         }
     }
-}
-
-bool operator==(const Value &left, const Value &right) {
-    return !(left < right or right < left);
 }
 
 std::vector<Value> readList(SimpleParser &scanner) {
