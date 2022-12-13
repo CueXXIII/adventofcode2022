@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <ranges>
+#include <set>
 #include <string>
 #include <variant>
 #include <vector>
@@ -66,6 +67,10 @@ bool operator<(const Value &left, const Value &right) {
     }
 }
 
+bool operator==(const Value &left, const Value &right) {
+    return !(left < right or right < left);
+}
+
 std::vector<Value> readList(SimpleParser &scanner) {
     std::vector<Value> result{};
     while (!scanner.skipChar(']')) {
@@ -85,6 +90,7 @@ int main(int argc, char **argv) {
         std::exit(EXIT_FAILURE);
     }
 
+    std::set<Value> orderedData{};
     SimpleParser scanner{argv[1]};
     int64_t pair = 0;
     int64_t indexSum = 0;
@@ -99,6 +105,22 @@ int main(int argc, char **argv) {
         if (rightOrder) {
             indexSum += pair;
         }
+        orderedData.insert(left);
+        orderedData.insert(right);
     }
     fmt::print("The sum of the ordered indexes is {}\n", indexSum);
+
+    Value d0{std::vector<Value>{{std::vector<Value>{{2}}}}};
+    Value d1{std::vector<Value>{{std::vector<Value>{{6}}}}};
+    orderedData.insert(d0);
+    orderedData.insert(d1);
+    int64_t index = 1;
+    int64_t indexProd = 1;
+    for (const auto &value : orderedData) {
+        if (value == d0 or value == d1) {
+            indexProd *= index;
+        }
+        ++index;
+    }
+    fmt::print("The product of the divider indices is {}\n", indexProd);
 }
