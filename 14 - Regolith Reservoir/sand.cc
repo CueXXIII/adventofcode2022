@@ -19,10 +19,8 @@ template <typename T> static constexpr T signum(const T num) {
 }
 
 void printGrid(const auto &map) {
-    Vec2l minPos{std::numeric_limits<int64_t>::max(),
-                 std::numeric_limits<int64_t>::max()};
-    Vec2l maxPos{std::numeric_limits<int64_t>::min(),
-                 std::numeric_limits<int64_t>::min()};
+    Vec2l minPos{sandStart};
+    Vec2l maxPos{sandStart};
 
     for (const auto &[pos, _] : map) {
         minPos = {std::min(minPos.x, pos.x), std::min(minPos.y, pos.y)};
@@ -33,6 +31,8 @@ void printGrid(const auto &map) {
         for (const auto x : iota(minPos.x - 1, maxPos.x + 2)) {
             if (map.contains({x, y})) {
                 fmt::print("{}", map.at({x, y}));
+            } else if (sandStart == Vec2l{x, y}) {
+                fmt::print("+");
             } else {
                 fmt::print(".");
             }
@@ -68,7 +68,7 @@ bool dropSand(auto &map, const auto maxY) {
             });
         if (fallTo == sandPos) {
             map[sandPos] = 'o';
-            return false;
+            return sandPos == sandStart;
         }
         sandPos = fallTo;
     } while (sandPos.y <= maxY);
@@ -106,4 +106,12 @@ int main(int argc, char **argv) {
     printGrid(cave);
     fmt::print("\n");
     fmt::print("{} grains of sand fell into the cave\n", sandCount);
+
+    drawLine(cave, {500 - maxY - 5, maxY + 2}, {500 + maxY + 5, maxY + 2});
+    while (!dropSand(cave, maxY + 3)) {
+        ++sandCount;
+    }
+    printGrid(cave);
+    fmt::print("\n");
+    fmt::print("A total of {} grains fell ontop the floor\n", sandCount + 1);
 }
