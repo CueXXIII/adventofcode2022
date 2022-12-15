@@ -62,46 +62,28 @@ struct Intervals {
     void insert(int64_t left, int64_t right) {
         // fmt::print("insert [{}-{}] \n  into  ", left, right);
         // print();
-        if (intervals.empty()) {
-            intervals.emplace_back(left, right);
-            // fmt::print("\n  gives "); print(); fmt::print("\n\n");
-            return;
-        }
         decltype(intervals) newIntervals{};
         while (!intervals.empty()) {
             if (right + 1 < intervals.front().first) {
-                newIntervals.emplace_back(left, right);
-                intervals.insert(intervals.begin(), newIntervals.begin(),
-                                 newIntervals.end());
-                // fmt::print("\n  gives "); print(); fmt::print("\n\n");
-                return;
-            }
-            if (left - 1 > intervals.front().second) {
-                newIntervals.push_back(intervals.front());
+                // store it here
+                break;
+            } else if (left - 1 > intervals.front().second) {
+                // move over one interval
+                newIntervals.splice(newIntervals.end(), intervals,
+                                    intervals.begin());
+            } else {
+                // store overlap in [left, right]
+                left = std::min(left, intervals.front().first);
+                right = std::max(right, intervals.front().second);
                 intervals.pop_front();
-                if (intervals.empty()) {
-                    newIntervals.emplace_back(left, right);
-                }
-                continue;
-            }
-            // store overlap in [left, right]
-            left = std::min(left, intervals.front().first);
-            right = std::max(right, intervals.front().second);
-            intervals.pop_front();
-            if (intervals.empty()) {
-                newIntervals.emplace_back(left, right);
             }
         }
-        intervals = std::move(newIntervals);
+        newIntervals.emplace_back(left, right);
+        intervals.splice(intervals.begin(), newIntervals);
         // fmt::print("\n  gives "); print(); fmt::print("\n\n");
     }
 
-    int64_t size() const {
-        print();
-        fmt::print("\n");
-        return intervals.size() == 1 ? 0 : 1;
-    }
-
+    // find an empty spot for 2022d15
     int64_t spot() const {
         if (intervals.size() > 1) {
             return intervals.front().second + 1;
@@ -160,6 +142,7 @@ int main(int argc, char **argv) {
         if (spot != maxScan + 1) {
             fmt::print("There is a spot on row [{}, {}] = {}\n", spot, row2,
                        spot * 4000000 + row2);
+            break;
         }
     }
 }
