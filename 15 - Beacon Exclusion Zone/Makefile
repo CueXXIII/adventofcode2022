@@ -1,4 +1,4 @@
-SRC=2021.cc
+SRC=2021.cc 2021map.cc
 
 CPPFLAGS=-I../common
 CXXFLAGS=-std=c++20 -O3 -flto=auto -Wall -Wextra -Wpedantic -Wconversion -Wshadow=local  -g -ggdb

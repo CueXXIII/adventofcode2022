@@ -2,7 +2,7 @@
 #include <fmt/format.h>
 #include <fstream>
 #include <iostream>
-#include <list>
+#include <map>
 #include <ranges>
 #include <string>
 #include <unordered_set>
@@ -57,41 +57,48 @@ int64_t scanRow(int64_t row) {
 }
 
 struct Intervals {
-    std::list<std::pair<int64_t, int64_t>> intervals;
+    std::map<int64_t, int64_t> intervals;
 
     void insert(int64_t left, int64_t right) {
         // fmt::print("insert [{}-{}] \n  into  ", left, right);
         // print();
-        decltype(intervals) newIntervals{};
-        while (!intervals.empty()) {
-            if (right + 1 < intervals.front().first) {
-                // store it here
-                break;
-            } else if (left - 1 > intervals.front().second) {
-                // move over one interval
-                newIntervals.splice(newIntervals.end(), intervals,
-                                    intervals.begin());
+
+        // see if our start is already in the list
+        auto next = intervals.lower_bound(left);
+        if (next != intervals.end() and next->first == left) {
+            next->second = std::max(next->second, right);
+        } else {
+            // try to keep the insert cheap
+            next = intervals.emplace_hint(next, left, right);
+        }
+        // we want to start trying to merge this element with the previous
+        // but if we are at the start, skip that step
+        auto prev = next;
+        if (next != intervals.begin()) {
+            --prev;
+        } else {
+            ++next;
+        }
+        // can we merge prev and next?
+        while (next != intervals.end()) {
+            if (next->first <= prev->second + 1) {
+                prev->second = std::max(prev->second, next->second);
+                next = intervals.erase(next);
             } else {
-                // store overlap in [left, right]
-                left = std::min(left, intervals.front().first);
-                right = std::max(right, intervals.front().second);
-                intervals.pop_front();
+                break;
             }
         }
-        intervals.emplace_front(left, right);
-        intervals.splice(intervals.begin(), newIntervals);
-        // fmt::print("\n  gives "); print(); fmt::print("\n\n");
     }
 
     // find an empty spot for 2022d15
     int64_t spot() const {
         if (intervals.size() > 1) {
-            return intervals.front().second + 1;
+            return intervals.begin()->second + 1;
         }
-        if (intervals.front().first == 1) {
+        if (intervals.begin()->first == 1) {
             return 0;
         }
-        return intervals.back().second + 1;
+        return intervals.rbegin()->second + 1;
     }
 
     void print() const {
