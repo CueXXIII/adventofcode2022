@@ -9,16 +9,13 @@
 #include <vector>
 
 #include "simpleparser.hpp"
+#include "utility.hpp"
 #include "vec2.hpp"
 
 using std::views::iota;
 
 int64_t probeRow = 2000000;
 int64_t maxScan = 4000000;
-
-template <typename T> T manhattan(const Vec2<T> &from, const Vec2<T> &to) {
-    return std::abs(from.x - to.x) + std::abs(from.y - to.y);
-}
 
 struct Sensor {
     Vec2l position{};

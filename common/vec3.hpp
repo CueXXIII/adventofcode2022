@@ -53,7 +53,7 @@ template <typename num> struct std::hash<Vec3<num>> {
 };
 
 // from https://fmt.dev/latest/api.html#format-api
-template <typename num> struct fmt::formatter<Vec2<num>> {
+template <typename num> struct fmt::formatter<Vec3<num>> {
     // parse format specifier "...{:3.14f}..." is passed as "3.14f}..."
     // and it must advance to the }
     // TODO: save custom format and use them for all values
@@ -64,7 +64,7 @@ template <typename num> struct fmt::formatter<Vec2<num>> {
         return it;
     }
     template <typename FormatContext>
-    auto format(const Vec2<num> &vec, FormatContext &ctx) const
+    auto format(const Vec3<num> &vec, FormatContext &ctx) const
         -> decltype(ctx.out()) {
         return fmt::format_to(ctx.out(), "({}, {}, {})", vec.x, vec.y, vec.z);
     }

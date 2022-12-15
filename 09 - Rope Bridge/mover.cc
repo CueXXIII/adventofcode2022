@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "simpleparser.hpp"
+#include "utility.hpp"
 #include "vec2.hpp"
 
 using std::views::iota;
@@ -19,10 +20,6 @@ std::unordered_set<Vec2l> visited9{{0, 0}};
 static const std::map<std::string, Vec2l> directions{
     {"R", {1, 0}}, {"L", {-1, 0}}, {"U", {0, -1}}, {"D", {0, 1}}};
 
-template <typename T> static constexpr T signum(const T num) {
-    return (T{0} < num) - (num < T{0});
-}
-
 struct Rope {
     std::vector<Vec2l> knots{{0, 0}};
 
@@ -30,7 +27,7 @@ struct Rope {
 
     bool stepTail(const auto &head, auto &tail) {
         const auto difference = head - tail;
-        const Vec2l moveStep = {signum(difference.x), signum(difference.y)};
+        const Vec2l moveStep = signum(difference);
         if (difference != moveStep) {
             tail += moveStep;
             return true;
