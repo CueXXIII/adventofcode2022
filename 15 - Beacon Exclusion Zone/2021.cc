@@ -13,7 +13,10 @@
 
 using std::views::iota;
 
-int64_t manhattan(const Vec2l &from, const Vec2l &to) {
+int64_t probeRow = 2000000;
+int64_t maxScan = 4000000;
+
+template <typename T> T manhattan(const Vec2<T> &from, const Vec2<T> &to) {
     return std::abs(from.x - to.x) + std::abs(from.y - to.y);
 }
 
@@ -101,9 +104,6 @@ struct Intervals {
     }
 };
 
-// const int64_t maxScan = 20;
-const int64_t maxScan = 4000000;
-
 int64_t scanEmptyRow(int64_t row) {
     Intervals scanned;
     for (const auto &sensor : deployed) {
@@ -121,6 +121,12 @@ int main(int argc, char **argv) {
         std::exit(EXIT_FAILURE);
     }
 
+    if (argv[1][0] == 'e') {
+        // we are giving example.txt or similar, change parameters
+        probeRow = 10;
+        maxScan = 20;
+    }
+
     SimpleParser scanner{argv[1]};
     while (!scanner.isEof()) {
         scanner.skipToken("Sensor at x=");
@@ -133,9 +139,7 @@ int main(int argc, char **argv) {
         const auto by = scanner.getInt64();
         deployed.emplace_back(Vec2l{sx, sy}, Vec2l{bx, by});
     }
-    // const int64_t row = 10;
-    const int64_t row = 2000000;
-    fmt::print("There are {} spots on row {}\n", scanRow(row), row);
+    fmt::print("There are {} spots on row {}\n", scanRow(probeRow), probeRow);
 
     for (const auto row2 : iota(0, maxScan + 1)) {
         const auto spot = scanEmptyRow(row2);
