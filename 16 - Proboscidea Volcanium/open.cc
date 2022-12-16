@@ -77,22 +77,19 @@ int64_t findPathWithElephant(const int64_t minutes, const std::string &meRoom,
         return 0;
     }
 
-    std::stringstream memoKey1{};
-    std::stringstream memoKey2{};
+    std::stringstream memoKey{};
     for (const auto &valve : valvesOpened) {
-        memoKey1 << valve;
+        memoKey << valve;
     }
-    memoKey2 << memoKey1.str();
-    memoKey1 << meRoom << meTime << eleRoom << eleTime;
-    memoKey2 << eleRoom << eleTime << meRoom << meTime;
-    if (memo.contains(memoKey1.str())) {
-        return memo[memoKey1.str()];
+    if (meRoom < eleRoom) {
+        memoKey << meRoom << meTime << eleRoom << eleTime;
+    } else {
+        memoKey << eleRoom << eleTime << meRoom << meTime;
     }
-    if (memo.contains(memoKey2.str())) {
-        return memo[memoKey2.str()];
+    if (memo.contains(memoKey.str())) {
+        return memo[memoKey.str()];
     }
-    // fmt::print("memoKey1 = {}\n",memoKey1.str());
-    // fmt::print("memoKey2 = {}\n",memoKey2.str());
+    // fmt::print("memoKey = {}\n",memoKey.str());
 
     int64_t pressure = 0;
     for (const auto &[destName, destRoom] : pressurized) {
@@ -133,8 +130,7 @@ int64_t findPathWithElephant(const int64_t minutes, const std::string &meRoom,
         }
     }
 
-    memo[memoKey1.str()] = pressure;
-    memo[memoKey2.str()] = pressure;
+    memo[memoKey.str()] = pressure;
     return pressure;
 }
 
