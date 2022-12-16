@@ -47,7 +47,7 @@ class SimpleParser {
     bool isEof() const;
 
     int64_t getInt64();
-    std::string getToken();
+    std::string getToken(const char terminate='\0');
 
     void skipWhitespace();
     bool skipChar(const char);
@@ -73,10 +73,10 @@ int64_t SimpleParser::getInt64() {
     return value;
 }
 
-std::string SimpleParser::getToken() {
+std::string SimpleParser::getToken(const char terminate) {
     skipWhitespace();
     auto end = pos;
-    while (end < buffer.size() && !std::isspace(buffer[end])) {
+    while (end < buffer.size() && !std::isspace(buffer[end]) && buffer[end] != terminate) {
         ++end;
     }
     const auto token = buffer.substr(pos, end - pos);
