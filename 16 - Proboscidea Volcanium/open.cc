@@ -5,7 +5,9 @@
 #include <map>
 #include <ranges>
 #include <set>
+#include <sstream>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -65,6 +67,67 @@ void fillFloydWarshall() {
     fmt::print("Populated {} paths\n", shortestPath.size());
 }
 
+std::unordered_map<std::string, int64_t> memo{};
+
+int64_t findPathWithElephant(const int64_t minutes, const std::string &meRoom,
+                             const std::string &eleRoom,
+                             const int64_t meTime = 0,
+                             const int64_t eleTime = 0,
+                             std::set<std::string> valvesOpened = {}) {
+    if (valvesOpened.size() == pressurized.size()) {
+        return 0;
+    }
+    std::stringstream memoKey;
+    memoKey << fmt::format("{}@{},{}@{},", meRoom, meTime, eleRoom, eleTime);
+    for (const auto &valve : valvesOpened) {
+        memoKey << valve;
+    }
+    if (memo.contains(memoKey.str())) {
+        return memo[memoKey.str()];
+    }
+    // fmt::print("memoKey = {}\n",memoKey.str());
+    int64_t pressure = 0;
+    for (const auto &[destName, destRoom] : pressurized) {
+        if (valvesOpened.contains(destName)) {
+            continue;
+        }
+        const int64_t meReleaseTime =
+            meTime + shortestPath[{meRoom, destName}] + 1;
+        const int64_t eleReleaseTime =
+            eleTime + shortestPath[{eleRoom, destName}] + 1;
+        if (meReleaseTime < eleReleaseTime) {
+            // try me
+            if (meReleaseTime <= minutes) {
+                const int64_t releasePressure =
+                    destRoom.pressure * (minutes - meReleaseTime);
+                valvesOpened.insert(destName);
+                const auto mePressure =
+                    findPathWithElephant(minutes, destName, eleRoom,
+                                         meReleaseTime, eleTime, valvesOpened);
+                valvesOpened.erase(destName);
+
+                pressure = std::max(pressure, releasePressure + mePressure);
+            }
+        } else {
+            // try my elephant
+            if (eleReleaseTime <= minutes) {
+                const int64_t releasePressure =
+                    destRoom.pressure * (minutes - eleReleaseTime);
+                valvesOpened.insert(destName);
+                const auto elePressure =
+                    findPathWithElephant(minutes, meRoom, destName, meTime,
+                                         eleReleaseTime, valvesOpened);
+                valvesOpened.erase(destName);
+
+                pressure = std::max(pressure, releasePressure + elePressure);
+            }
+        }
+    }
+
+    memo[memoKey.str()] = pressure;
+    return pressure;
+}
+
 int64_t findPath(const int64_t minutes, const std::string &roomName,
                  const int64_t time = 0,
                  std::set<std::string> valvesOpened = {}) {
@@ -122,4 +185,8 @@ int main(int argc, char **argv) {
 
     const auto releasedPressure = findPath(30, "AA");
     fmt::print("You can release a pressure of {}\n", releasedPressure);
+
+    const auto releasedTwo = findPathWithElephant(26, "AA", "AA");
+    fmt::print("You and your elephant can release a pressure of {}\n",
+               releasedTwo);
 }
