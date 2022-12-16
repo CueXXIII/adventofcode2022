@@ -1,0 +1,24 @@
+graph example {
+	"AA" [label="AA\n0"];
+	"BB" [label="BB\n13"];
+	"CC" [label="CC\n2"];
+	"DD" [label="DD\n20"];
+	"EE" [label="EE\n3"];
+	"FF" [label="FF\n0"];
+	"GG" [label="GG\n0"];
+	"HH" [label="HH\n22"];
+	"II" [label="II\n0"];
+	"JJ" [label="JJ\n21"];
+
+	AA -- DD;
+	AA -- II;
+	AA -- BB;
+	BB -- CC;
+	CC -- DD;
+	DD -- EE;
+	EE -- FF;
+	FF -- GG;
+	GG -- HH;
+	II -- JJ;
+
+}
