@@ -3,7 +3,9 @@
 #include <fstream>
 #include <iostream>
 #include <ranges>
+#include <sstream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "vec2.hpp"
@@ -17,7 +19,9 @@ struct Tower;
 
 struct Tower {
     std::vector<std::string> pile{};
+    int64_t removedHeight{0};
     int64_t nextShape{0};
+    std::array<int64_t, 7> topPos{0, 0, 0, 0, 0, 0, 0};
 
     Rock spawnRock();
     void addRock(const Rock &rock);
@@ -129,27 +133,40 @@ void Tower::addRock(const Rock &rock) {
     for (const auto y : iota(rock.pos.y, rock.pos.y + rock.height())) {
         for (const auto x : iota(rock.pos.x, rock.pos.x + rock.width())) {
             if (rock.isSolid({x, y})) {
-                while (y >= (int64_t)pile.size()) {
+                while (y >= (int64_t)pile.size() + removedHeight) {
                     pile.push_back(".......");
                 }
-                pile[y][x] = '#';
+                pile[y - removedHeight][x] = '#';
+                topPos[x] = y;
             }
+        }
+    }
+
+    for (const auto y : iota(rock.pos.y, rock.pos.y + rock.height())) {
+        if (pile[y - removedHeight] == "#######") {
+            decltype(pile) newPile{};
+            for (const auto i : iota(y + 1, height())) {
+                newPile.push_back(pile.at(i - removedHeight));
+            }
+            removedHeight = y + 1;
+            pile = std::move(newPile);
+            break;
         }
     }
 }
 
-int64_t Tower::height() const { return pile.size(); }
+int64_t Tower::height() const { return pile.size() + removedHeight; }
 
 bool Tower::isSolid(const Vec2l &pos) const {
     // fmt::print("Tower::isSolid({})\n",pos);
-    if (pos.y < 0) {
+    if (pos.y < removedHeight) {
         return true;
     }
     if (pos.x < 0 or pos.x > 6) {
         return true;
     }
     if (pos.y < height()) {
-        return pile[pos.y][pos.x] == '#';
+        return pile[pos.y - removedHeight][pos.x] == '#';
     } else {
         return false;
     }
@@ -162,8 +179,8 @@ void Tower::print() const {
 
 void Tower::print(const Rock &current) const {
     const auto maxY = std::max(height(), current.pos.y + current.height());
-    for (const auto y :
-         iota(-maxY, 1) | std::views::transform([](auto x) { return -x; })) {
+    for (const auto y : iota(-maxY, -removedHeight + 1) |
+                            std::views::transform([](auto x) { return -x; })) {
         std::cout << '|';
         for (const auto x : iota(0, 7)) {
             if (current.isSolid({x, y})) {
@@ -182,26 +199,74 @@ void Tower::print(const Rock &current) const {
         }
         std::cout << "|\n";
     }
+    if (removedHeight > 0) {
+        fmt::print("\n[+{:5}l]\n\n", removedHeight);
+    }
     std::cout << "+-------+\n";
     std::cout << "Size: " << height() << "\n\n";
 }
 
-int64_t level1(std::string &input) {
+int64_t level(std::string &input, int64_t rounds) {
     Tower tower{};
     Jets jets{input};
     int64_t fallenRocks = 0;
-    while (fallenRocks < 2022) {
+    int64_t wallClock = 0;
+    int64_t addTowerHeight = 0;
+
+    struct State {
+        int64_t rocks;
+        int64_t height;
+        int64_t clock;
+    };
+    std::unordered_map<std::string, State> loopDetect{};
+
+    while (fallenRocks < rounds) {
         auto rock = tower.spawnRock();
         // tower.print(rock);
         while (rock.isFalling()) {
             rock.blow(jets.direction());
             rock.drop();
+            ++wallClock;
+
+            // check for repeats
+            if (wallClock % input.size() == 0) {
+                std::stringstream hash{};
+                for (const auto n : tower.topPos) {
+                    hash << tower.height() - n << ':';
+                }
+                hash << rock.pos.x << ':' << rock.pos.y - tower.height() << ':'
+                     << rock.shape;
+                if (!loopDetect.contains(hash.str())) {
+                    loopDetect[hash.str()] =
+                        State{fallenRocks, tower.height(), wallClock};
+                } else {
+                    // advance loop and game state here
+                    const auto &prev = loopDetect[hash.str()];
+                    State loopSize = {fallenRocks - prev.rocks,
+                                      tower.height() - prev.height,
+                                      wallClock - prev.clock};
+                    fmt::print("Loop detected after {} rocks!\n",
+                               loopSize.rocks);
+                    const int64_t loopsToGo =
+                        (rounds - fallenRocks - 1) / loopSize.rocks;
+                    // advance!
+                    fallenRocks += loopSize.rocks * loopsToGo;
+                    addTowerHeight = loopSize.height * loopsToGo;
+                    wallClock += loopSize.clock * loopsToGo;
+                    // There may be other loops of the same height, forget them
+                    loopDetect.clear();
+                }
+            }
         }
         ++fallenRocks;
     }
-    tower.print();
-    return tower.height();
+    // tower.print();
+    return tower.height() + addTowerHeight;
 }
+
+int64_t level1(std::string &input) { return level(input, 2022); }
+
+int64_t level2(std::string &input) { return level(input, 1000000000000); }
 
 int main(int argc, char **argv) {
     if (argc != 2) {
@@ -213,4 +278,5 @@ int main(int argc, char **argv) {
     std::string line;
     std::getline(infile, line);
     fmt::print("The 2022 rocks tower is {} tall\n", level1(line));
+    fmt::print("The 1000000000000 rocks tower is {} tall\n", level2(line));
 }
