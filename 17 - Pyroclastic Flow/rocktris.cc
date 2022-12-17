@@ -19,7 +19,6 @@ struct Tower;
 
 struct Tower {
     std::vector<std::string> pile{};
-    int64_t removedHeight{0};
     int64_t nextShape{0};
     std::array<int64_t, 7> topPos{0, 0, 0, 0, 0, 0, 0};
 
@@ -38,11 +37,7 @@ struct Shape {
 
     int64_t height() const { return s.size(); }
 
-    bool isSolid(const Vec2l &pos) const {
-        // fmt::print("Shape::isSolid({})\n",pos);
-        // fmt::print("  w={},h={}\n",width(),height());
-        return s.at(pos.y)[pos.x] == '#';
-    }
+    bool isSolid(const Vec2l &pos) const { return s.at(pos.y)[pos.x] == '#'; }
 };
 
 static const std::vector<Shape> shapes{{{{"####"}},
@@ -114,7 +109,6 @@ struct Rock {
     int64_t height() const { return shapes.at(shape).height(); }
 
     bool isSolid(const Vec2l &loc) const {
-        // fmt::print("Rock::isSolid({}) @{}\n",loc,pos);
         const auto rPos = loc - pos;
         if (rPos.x < 0 or rPos.y < 0 or rPos.x >= width() or
             rPos.y >= height()) {
@@ -133,40 +127,27 @@ void Tower::addRock(const Rock &rock) {
     for (const auto y : iota(rock.pos.y, rock.pos.y + rock.height())) {
         for (const auto x : iota(rock.pos.x, rock.pos.x + rock.width())) {
             if (rock.isSolid({x, y})) {
-                while (y >= (int64_t)pile.size() + removedHeight) {
+                while (y >= (int64_t)pile.size()) {
                     pile.push_back(".......");
                 }
-                pile[y - removedHeight][x] = '#';
+                pile[y][x] = '#';
                 topPos[x] = y;
             }
         }
     }
-
-    for (const auto y : iota(rock.pos.y, rock.pos.y + rock.height())) {
-        if (pile[y - removedHeight] == "#######") {
-            decltype(pile) newPile{};
-            for (const auto i : iota(y + 1, height())) {
-                newPile.push_back(pile.at(i - removedHeight));
-            }
-            removedHeight = y + 1;
-            pile = std::move(newPile);
-            break;
-        }
-    }
 }
 
-int64_t Tower::height() const { return pile.size() + removedHeight; }
+int64_t Tower::height() const { return pile.size(); }
 
 bool Tower::isSolid(const Vec2l &pos) const {
-    // fmt::print("Tower::isSolid({})\n",pos);
-    if (pos.y < removedHeight) {
+    if (pos.y < 0) {
         return true;
     }
     if (pos.x < 0 or pos.x > 6) {
         return true;
     }
     if (pos.y < height()) {
-        return pile[pos.y - removedHeight][pos.x] == '#';
+        return pile[pos.y][pos.x] == '#';
     } else {
         return false;
     }
@@ -179,8 +160,8 @@ void Tower::print() const {
 
 void Tower::print(const Rock &current) const {
     const auto maxY = std::max(height(), current.pos.y + current.height());
-    for (const auto y : iota(-maxY, -removedHeight + 1) |
-                            std::views::transform([](auto x) { return -x; })) {
+    for (const auto y :
+         iota(-maxY, 1) | std::views::transform([](auto x) { return -x; })) {
         std::cout << '|';
         for (const auto x : iota(0, 7)) {
             if (current.isSolid({x, y})) {
@@ -198,9 +179,6 @@ void Tower::print(const Rock &current) const {
             }
         }
         std::cout << "|\n";
-    }
-    if (removedHeight > 0) {
-        fmt::print("\n[+{:5}l]\n\n", removedHeight);
     }
     std::cout << "+-------+\n";
     std::cout << "Size: " << height() << "\n\n";
@@ -222,7 +200,6 @@ int64_t level(std::string &input, int64_t rounds) {
 
     while (fallenRocks < rounds) {
         auto rock = tower.spawnRock();
-        // tower.print(rock);
         while (rock.isFalling()) {
             rock.blow(jets.direction());
             rock.drop();
@@ -245,7 +222,7 @@ int64_t level(std::string &input, int64_t rounds) {
                     State loopSize = {fallenRocks - prev.rocks,
                                       tower.height() - prev.height,
                                       wallClock - prev.clock};
-                    fmt::print("Loop detected after {} rocks!\n",
+                    fmt::print("Loop detected over {} rocks!\n",
                                loopSize.rocks);
                     const int64_t loopsToGo =
                         (rounds - fallenRocks - 1) / loopSize.rocks;
@@ -260,7 +237,6 @@ int64_t level(std::string &input, int64_t rounds) {
         }
         ++fallenRocks;
     }
-    // tower.print();
     return tower.height() + addTowerHeight;
 }
 
