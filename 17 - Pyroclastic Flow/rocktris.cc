@@ -258,8 +258,8 @@ int main(int argc, char **argv) {
     std::string line;
     std::getline(infile, line);
 
-    while (line.back() != '<' and line.back != '>') {
-        line.pop_Back();
+    while (line.back() != '<' and line.back() != '>') {
+        line.pop_back();
     }
     fmt::print("The 2022 rocks tower is {} tall\n", level1(line));
     fmt::print("The 1000000000000 rocks tower is {} tall\n", level2(line));
