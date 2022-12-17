@@ -210,7 +210,11 @@ int64_t level(std::string &input, int64_t rounds) {
                 std::stringstream hash{};
                 for (const auto n : tower.topPos) {
                     if (n != 0) {
-                        hash << tower.height() - n << ':';
+                        if (tower.height() - n > (int64_t)input.size()) {
+                            hash << "X:";
+                        } else {
+                            hash << tower.height() - n << ':';
+                        }
                     } else {
                         hash << "-:";
                     }
