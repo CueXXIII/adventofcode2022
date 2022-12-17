@@ -209,7 +209,11 @@ int64_t level(std::string &input, int64_t rounds) {
             if (wallClock % input.size() == 0) {
                 std::stringstream hash{};
                 for (const auto n : tower.topPos) {
-                    hash << tower.height() - n << ':';
+                    if (n != 0) {
+                        hash << tower.height() - n << ':';
+                    } else {
+                        hash << "-:";
+                    }
                 }
                 hash << rock.pos.x << ':' << rock.pos.y - tower.height() << ':'
                      << rock.shape;
@@ -222,8 +226,8 @@ int64_t level(std::string &input, int64_t rounds) {
                     State loopSize = {fallenRocks - prev.rocks,
                                       tower.height() - prev.height,
                                       wallClock - prev.clock};
-                    fmt::print("Loop detected over {} rocks!\n",
-                               loopSize.rocks);
+                    fmt::print("Loop detected over {} rocks, {} cycles!\n",
+                               loopSize.rocks, loopSize.clock);
                     const int64_t loopsToGo =
                         (rounds - fallenRocks - 1) / loopSize.rocks;
                     // advance!
@@ -253,6 +257,10 @@ int main(int argc, char **argv) {
     std::ifstream infile{argv[1]};
     std::string line;
     std::getline(infile, line);
+
+    while (line.back() != '<' and line.back != '>') {
+        line.pop_Back();
+    }
     fmt::print("The 2022 rocks tower is {} tall\n", level1(line));
     fmt::print("The 1000000000000 rocks tower is {} tall\n", level2(line));
 }
