@@ -21,11 +21,12 @@ std::unordered_set<Vec3l> lava{};
 std::unordered_set<Vec3l> water{};
 
 void flood(const Vec3l &min, const Vec3l &max) {
-    std::stack<Vec3l> toFill{};
-    toFill.push(min);
+    std::unordered_set<Vec3l> toFill{};
+    toFill.insert(min);
     while (!toFill.empty()) {
-        const auto current = toFill.top();
-        toFill.pop();
+        auto it = toFill.begin();
+        const auto current = *it;
+        toFill.erase(it);
         water.insert(current);
         for (const auto &dir : directions) {
             const auto next = current + dir;
@@ -33,7 +34,7 @@ void flood(const Vec3l &min, const Vec3l &max) {
                 if (next.x >= min.x and next.y >= min.y and next.z >= min.z) {
                     if (next.x <= max.x and next.y <= max.y and
                         next.z <= max.z) {
-                        toFill.push(next);
+                        toFill.insert(next);
                     }
                 }
             }
