@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <ranges>
+#include <stack>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -17,6 +18,44 @@ std::vector<Vec3l> directions{{-1, 0, 0}, {1, 0, 0},  {0, -1, 0},
                               {0, 1, 0},  {0, 0, -1}, {0, 0, 1}};
 
 std::unordered_set<Vec3l> lava{};
+std::unordered_set<Vec3l> water{};
+
+void flood(const Vec3l &min, const Vec3l &max) {
+    std::stack<Vec3l> toFill{};
+    toFill.push(min);
+    while (!toFill.empty()) {
+        const auto current = toFill.top();
+        toFill.pop();
+        water.insert(current);
+        for (const auto &dir : directions) {
+            const auto next = current + dir;
+            if (!water.contains(next) and !lava.contains(next)) {
+                if (next.x >= min.x and next.y >= min.y and next.z >= min.z) {
+                    if (next.x <= max.x and next.y <= max.y and
+                        next.z <= max.z) {
+                        toFill.push(next);
+                    }
+                }
+            }
+        }
+    }
+}
+
+void flood() {
+    auto drop = lava.begin();
+    Vec3l min{*drop};
+    Vec3l max{*drop};
+    ++drop;
+    while (drop != lava.end()) {
+        min = {std::min(drop->x, min.x), std::min(drop->y, min.y),
+               std::min(drop->z, min.z)};
+        max = {std::max(drop->x, max.x), std::max(drop->y, max.y),
+               std::max(drop->z, max.z)};
+        ++drop;
+    }
+
+    flood(min - Vec3l{1, 1, 1}, max + Vec3l{1, 1, 1});
+}
 
 int main(int argc, char **argv) {
     if (argc != 2) {
@@ -42,4 +81,15 @@ int main(int argc, char **argv) {
         }
     }
     fmt::print("The outside is {} square units\n", outer);
+
+    flood();
+    outer = 0;
+    for (const auto &drop : lava) {
+        for (const auto &dir : directions) {
+            if (water.contains(drop + dir)) {
+                ++outer;
+            }
+        }
+    }
+    fmt::print("The reachable outside is {} square units\n", outer);
 }
