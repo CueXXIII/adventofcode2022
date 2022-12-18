@@ -1,6 +1,9 @@
 #pragma once
 
+#include <algorithm>
+#include <concepts>
 #include <fstream>
+#include <utility>
 
 #include "vec2.hpp"
 
@@ -69,6 +72,28 @@ template <typename num> struct fmt::formatter<Vec3<num>> {
         return fmt::format_to(ctx.out(), "({}, {}, {})", vec.x, vec.y, vec.z);
     }
 };
+
+// is_instantiation_of isdefined and included from vec2.hpp
+
+// Return bounding box as std::pair<min, max> over an iterable container.
+// The container must not be empty.
+template <typename iter>
+concept isVec3Iterable =
+    is_instantiation_of<Vec3, typename iter::value_type>::value;
+
+template <typename iterable>
+auto boundingBox(iterable &container) requires isVec3Iterable<iterable> {
+    auto it = container.begin();
+    auto min{*it};
+    auto max{*it};
+    while (++it != container.end()) {
+        min = {std::min(min.x, it->x), std::min(min.y, it->y),
+               std::min(min.z, it->z)};
+        max = {std::max(max.x, it->x), std::max(max.y, it->y),
+               std::max(max.z, it->z)};
+    }
+    return std::pair{min, max};
+}
 
 using Vec3i = Vec3<int32_t>;
 using Vec3l = Vec3<int64_t>;

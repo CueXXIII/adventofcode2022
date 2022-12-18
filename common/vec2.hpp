@@ -1,6 +1,9 @@
 #pragma once
 
+#include <algorithm>
+#include <concepts>
 #include <fstream>
+#include <utility>
 
 template <typename num> struct Vec2 {
     num x{};
@@ -62,6 +65,31 @@ template <typename num> struct fmt::formatter<Vec2<num>> {
         return fmt::format_to(ctx.out(), "({}, {})", vec.x, vec.y);
     }
 };
+
+// from
+// https://stackoverflow.com/questions/17390605/doing-a-static-assert-that-a-template-type-is-another-template
+template <template <typename...> class T, typename... Ts>
+struct is_instantiation_of : std::false_type {};
+template <template <typename...> class T, typename... Ts>
+struct is_instantiation_of<T, T<Ts...>> : std::true_type {};
+
+// Return bounding box as std::pair<min, max> over an iterable container.
+// The container must not be empty.
+template <typename iter>
+concept isVec2Iterable =
+    is_instantiation_of<Vec2, typename iter::value_type>::value;
+
+template <typename iterable>
+auto boundingBox(const iterable &container) requires isVec2Iterable<iterable> {
+    auto it = container.begin();
+    auto min{*it};
+    auto max{*it};
+    while (++it != container.end()) {
+        min = {std::min(min.x, it->x), std::min(min.y, it->y)};
+        max = {std::max(max.x, it->x), std::max(max.y, it->y)};
+    }
+    return std::pair{min, max};
+}
 
 using Vec2i = Vec2<int32_t>;
 using Vec2l = Vec2<int64_t>;

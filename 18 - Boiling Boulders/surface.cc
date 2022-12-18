@@ -43,18 +43,7 @@ void flood(const Vec3l &min, const Vec3l &max) {
 }
 
 void flood() {
-    auto drop = lava.begin();
-    Vec3l min{*drop};
-    Vec3l max{*drop};
-    ++drop;
-    while (drop != lava.end()) {
-        min = {std::min(drop->x, min.x), std::min(drop->y, min.y),
-               std::min(drop->z, min.z)};
-        max = {std::max(drop->x, max.x), std::max(drop->y, max.y),
-               std::max(drop->z, max.z)};
-        ++drop;
-    }
-
+    const auto [min, max] = boundingBox(lava);
     flood(min - Vec3l{1, 1, 1}, max + Vec3l{1, 1, 1});
 }
 
