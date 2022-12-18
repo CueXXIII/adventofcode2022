@@ -22,8 +22,12 @@ std::unordered_set<Vec3l> water{};
 
 void flood(const Vec3l &min, const Vec3l &max) {
     std::unordered_set<Vec3l> toFill{};
+    size_t maxDepth = 0;
     toFill.insert(min);
     while (!toFill.empty()) {
+        if (maxDepth < toFill.size()) {
+            maxDepth = toFill.size();
+        }
         auto it = toFill.begin();
         const auto current = *it;
         toFill.erase(it);
@@ -40,6 +44,7 @@ void flood(const Vec3l &min, const Vec3l &max) {
             }
         }
     }
+    fmt::print("stack size = {}\n", maxDepth);
 }
 
 void flood() {
