@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <concepts>
 #include <fstream>
-#include <utility>
 
 template <typename num> struct Vec2 {
     num x{};

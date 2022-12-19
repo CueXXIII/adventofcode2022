@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <concepts>
 #include <fstream>
-#include <utility>
 
 #include "vec2.hpp"
 
