@@ -1,17 +1,17 @@
 #include <algorithm>
 #include <fmt/format.h>
 #include <fstream>
+#include <future>
 #include <iostream>
 #include <limits>
 #include <ranges>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include "simpleparser.hpp"
 
 using std::views::iota;
-
-int64_t geodesMonitor = 0;
 
 enum Material { ore = 0, clay = 1, obsidian = 2, geode = 3, none = -1 };
 
@@ -100,7 +100,7 @@ struct World {
 std::vector<Blueprint> blueprints;
 
 int64_t geodeAmount(const Blueprint &print, int64_t minutesLeft, World world,
-                    const Material buildingBot) {
+                    const Material buildingBot, int64_t &geodesMonitor) {
     // debug
     // std::cout << "World with " << minutesLeft << " minutes left:\n  building
     // "
@@ -128,7 +128,7 @@ int64_t geodeAmount(const Blueprint &print, int64_t minutesLeft, World world,
         return world.materials[geode];
     } else if (minutesLeft == 1) {
         // doesn't matter what we build in the last minute, either
-        return geodeAmount(print, 1, world, none);
+        return geodeAmount(print, 1, world, none, geodesMonitor);
     }
 
     // check if we should abort early
@@ -150,21 +150,18 @@ int64_t geodeAmount(const Blueprint &print, int64_t minutesLeft, World world,
     int64_t maxGeodes = 0;
     for (const Material bot : {geode, obsidian, clay, none, ore}) {
         if (world.canBuild(print, bot)) {
-            maxGeodes = std::max(maxGeodes,
-                                 geodeAmount(print, minutesLeft, world, bot));
+            maxGeodes =
+                std::max(maxGeodes, geodeAmount(print, minutesLeft, world, bot,
+                                                geodesMonitor));
         }
     }
     return maxGeodes;
 }
 
 int64_t geodeAmount(const Blueprint &print, int64_t minutes) {
-    fmt::print("Blueprint {}: ", print.id);
-    std::cout << std::flush;
-    geodesMonitor = 0;
+    int64_t geodesMonitor = 0;
     // turn 1 does not require thinking, we can't build anything yet
-    const auto result = geodeAmount(print, minutes, {}, none);
-    fmt::print("{} geodes\n", result);
-    return result;
+    return geodeAmount(print, minutes, {}, none, geodesMonitor);
 }
 
 int64_t qualityLevel(const Blueprint &print) {
@@ -202,20 +199,46 @@ int main(int argc, char **argv) {
         }
     }
 
-    int64_t sum = 0;
-    for (const auto &blueprint : blueprints) {
-        sum += qualityLevel(blueprint);
-    }
-    fmt::print("The total quality level is {}\n", sum);
+    std::vector<std::future<int64_t>> taskpool1{};
+    std::vector<std::future<int64_t>> taskpool2{};
 
-    int64_t prod = 1;
+    // launch part 2 first
     for (const auto i : iota(0, 3)) {
         // example only has 2 blueprints
         if (i < (int64_t)blueprints.size()) {
-            prod *= geodeAmount(blueprints[i], 32);
-        } else {
-            prod = 0;
+            taskpool2.push_back(std::async(
+                std::launch::async,
+                [](const auto num) { return geodeAmount(blueprints[num], 32); },
+                i));
         }
+    }
+    // launch part 1
+    for (const auto &blueprint : blueprints) {
+        taskpool1.push_back(
+            std::async(std::launch::async, qualityLevel, blueprint));
+    }
+
+    // results part 1
+    int64_t sum = 0;
+    int64_t id = 0;
+    for (auto &result : taskpool1) {
+        fmt::print("Blueprint {}: ", ++id);
+        std::cout << std::flush;
+        const auto geodes = result.get();
+        fmt::print("{} geodes\n", geodes);
+        sum += geodes;
+    }
+    fmt::print("The total quality level is {}\n", sum);
+
+    // results part 2
+    int64_t prod = 1;
+    id = 0;
+    for (auto &result : taskpool2) {
+        fmt::print("Blueprint {}: ", ++id);
+        std::cout << std::flush;
+        const auto geodes = result.get();
+        fmt::print("{} geodes\n", geodes);
+        prod *= geodes;
     }
     fmt::print("The product of the first 3 blueprints is {}\n", prod);
 }
