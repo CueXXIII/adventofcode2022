@@ -79,6 +79,13 @@ struct World {
         }
     }
 
+    bool supplyCompleted(const Blueprint &print) const {
+        return robots[ore] == print.maxBot[ore] and
+               robots[clay] == print.maxBot[clay] and
+               robots[obsidian] == print.maxBot[obsidian] and
+               canBuild(print, geode);
+    }
+
     friend std::ostream &operator<<(std::ostream &out, const World &world) {
         out << fmt::format("  Collecting bots: {}, {}, {}, {}\n",
                            world.robots[0], world.robots[1], world.robots[2],
@@ -115,7 +122,7 @@ int64_t geodeAmount(const Blueprint &print, int64_t minutesLeft, World world,
     // check for end of time
     if (minutesLeft == 0) {
         if (geodesMonitor < world.materials[geode]) {
-            fmt::print("New max geodes: {}\n", world.materials[geode]);
+            //fmt::print("New max geodes: {}\n", world.materials[geode]);
             geodesMonitor = world.materials[geode];
         }
         return world.materials[geode];
@@ -125,9 +132,19 @@ int64_t geodeAmount(const Blueprint &print, int64_t minutesLeft, World world,
     }
 
     // check if we should abort early
+    //
+    // assume one geode bot every round
+    const auto canHarvestGeodes =
+        world.robots[geode] * minutesLeft + (minutesLeft - 1) * minutesLeft / 2;
+    if (world.materials[geode] + canHarvestGeodes < geodesMonitor) {
+        return 0;
+    }
 
     // think about next turn
     int64_t maxGeodes = 0;
+    if (world.supplyCompleted(print)) {
+        return geodeAmount(print, minutesLeft, world, geode);
+    }
     for (const Material bot : {geode, obsidian, clay, none, ore}) {
         if (world.canBuild(print, bot)) {
             maxGeodes = std::max(maxGeodes,
@@ -138,13 +155,13 @@ int64_t geodeAmount(const Blueprint &print, int64_t minutesLeft, World world,
 }
 
 int64_t geodeAmount(const Blueprint &print, int64_t minutes) {
+    fmt::print("Blueprint {}\n", print.id);
+    geodesMonitor = 0;
     // turn 1 does not require thinking, we can't build anything yet
     return geodeAmount(print, minutes, {}, none);
 }
 
 int64_t qualityLevel(const Blueprint &print) {
-    fmt::print("Blueprint {}\n", print.id);
-    geodesMonitor = 0;
     return geodeAmount(print, 24) * print.id;
 }
 
@@ -178,9 +195,16 @@ int main(int argc, char **argv) {
             fmt::print("Error: misformed blueprint {}\n", id);
         }
     }
+
     int64_t sum = 0;
     for (const auto &blueprint : blueprints) {
         sum += qualityLevel(blueprint);
     }
     fmt::print("The total quality level is {}\n", sum);
+
+    int64_t prod = 1;
+    for (const auto i : iota(0, 3)) {
+        prod *= geodeAmount(blueprints[i], 32);
+    }
+    fmt::print("The product of the first 3 blueprints is {}\n", prod);
 }
