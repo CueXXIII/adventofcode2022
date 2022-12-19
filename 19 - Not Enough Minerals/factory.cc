@@ -100,7 +100,8 @@ struct World {
 std::vector<Blueprint> blueprints;
 
 int64_t geodeAmount(const Blueprint &print, int64_t minutesLeft, World world,
-                    const Material buildingBot, int64_t &geodesMonitor) {
+                    const Material buildingBot, int64_t &geodesMonitor,
+                    std::array<bool, 4> robotSkipped) {
     // debug
     // std::cout << "World with " << minutesLeft << " minutes left:\n  building
     // "
@@ -128,7 +129,7 @@ int64_t geodeAmount(const Blueprint &print, int64_t minutesLeft, World world,
         return world.materials[geode];
     } else if (minutesLeft == 1) {
         // doesn't matter what we build in the last minute, either
-        return geodeAmount(print, 1, world, none, geodesMonitor);
+        return geodeAmount(print, 1, world, none, geodesMonitor, robotSkipped);
     }
 
     // check if we should abort early
@@ -148,20 +149,25 @@ int64_t geodeAmount(const Blueprint &print, int64_t minutesLeft, World world,
 
     // think about next turn
     int64_t maxGeodes = 0;
-    for (const Material bot : {geode, obsidian, clay, ore, none}) {
-        if (world.canBuild(print, bot)) {
+    for (const Material bot : {geode, obsidian, clay, ore}) {
+        if (world.canBuild(print, bot) and !robotSkipped[bot]) {
             maxGeodes =
                 std::max(maxGeodes, geodeAmount(print, minutesLeft, world, bot,
-                                                geodesMonitor));
+                                                geodesMonitor,
+                                                {false, false, false, false}));
+            robotSkipped[bot] = true;
         }
     }
+    maxGeodes = std::max(maxGeodes, geodeAmount(print, minutesLeft, world, none,
+                                                geodesMonitor, robotSkipped));
     return maxGeodes;
 }
 
 int64_t geodeAmount(const Blueprint &print, int64_t minutes) {
     int64_t geodesMonitor = 0;
     // turn 1 does not require thinking, we can't build anything yet
-    return geodeAmount(print, minutes, {}, none, geodesMonitor);
+    return geodeAmount(print, minutes, {}, none, geodesMonitor,
+                       {false, false, false, false});
 }
 
 int64_t qualityLevel(const Blueprint &print) {
