@@ -122,7 +122,7 @@ int64_t geodeAmount(const Blueprint &print, int64_t minutesLeft, World world,
     // check for end of time
     if (minutesLeft == 0) {
         if (geodesMonitor < world.materials[geode]) {
-            //fmt::print("New max geodes: {}\n", world.materials[geode]);
+            // fmt::print("New max geodes: {}\n", world.materials[geode]);
             geodesMonitor = world.materials[geode];
         }
         return world.materials[geode];
@@ -134,17 +134,20 @@ int64_t geodeAmount(const Blueprint &print, int64_t minutesLeft, World world,
     // check if we should abort early
     //
     // assume one geode bot every round
-    const auto canHarvestGeodes =
-        world.robots[geode] * minutesLeft + (minutesLeft - 1) * minutesLeft / 2;
-    if (world.materials[geode] + canHarvestGeodes < geodesMonitor) {
+    const auto canHarvestGeodes = world.materials[geode] +
+                                  world.robots[geode] * minutesLeft +
+                                  (minutesLeft - 1) * minutesLeft / 2;
+    if (canHarvestGeodes <= geodesMonitor) {
         return 0;
+    }
+    // we are done building lesser bots, endgame now
+    if (world.supplyCompleted(print)) {
+        geodesMonitor = canHarvestGeodes;
+        return canHarvestGeodes;
     }
 
     // think about next turn
     int64_t maxGeodes = 0;
-    if (world.supplyCompleted(print)) {
-        return geodeAmount(print, minutesLeft, world, geode);
-    }
     for (const Material bot : {geode, obsidian, clay, none, ore}) {
         if (world.canBuild(print, bot)) {
             maxGeodes = std::max(maxGeodes,
@@ -155,10 +158,13 @@ int64_t geodeAmount(const Blueprint &print, int64_t minutesLeft, World world,
 }
 
 int64_t geodeAmount(const Blueprint &print, int64_t minutes) {
-    fmt::print("Blueprint {}\n", print.id);
+    fmt::print("Blueprint {}: ", print.id);
+    std::cout << std::flush;
     geodesMonitor = 0;
     // turn 1 does not require thinking, we can't build anything yet
-    return geodeAmount(print, minutes, {}, none);
+    const auto result = geodeAmount(print, minutes, {}, none);
+    fmt::print("{} geodes\n", result);
+    return result;
 }
 
 int64_t qualityLevel(const Blueprint &print) {
@@ -204,7 +210,12 @@ int main(int argc, char **argv) {
 
     int64_t prod = 1;
     for (const auto i : iota(0, 3)) {
-        prod *= geodeAmount(blueprints[i], 32);
+        // example only has 2 blueprints
+        if (i < (int64_t)blueprints.size()) {
+            prod *= geodeAmount(blueprints[i], 32);
+        } else {
+            prod = 0;
+        }
     }
     fmt::print("The product of the first 3 blueprints is {}\n", prod);
 }
