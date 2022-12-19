@@ -148,7 +148,7 @@ int64_t geodeAmount(const Blueprint &print, int64_t minutesLeft, World world,
 
     // think about next turn
     int64_t maxGeodes = 0;
-    for (const Material bot : {geode, obsidian, clay, none, ore}) {
+    for (const Material bot : {geode, obsidian, clay, ore, none}) {
         if (world.canBuild(print, bot)) {
             maxGeodes =
                 std::max(maxGeodes, geodeAmount(print, minutesLeft, world, bot,
