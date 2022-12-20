@@ -23,8 +23,6 @@ int64_t dataAt(const int64_t pos) {
     throw("not reached");
 }
 
-int64_t pMod(int64_t n, int64_t m) { return (n % m + m) % m; }
-
 void printData() {
     fmt::print("{}", dataAt(0));
     for (const auto pos : iota(1, (int64_t)position.size())) {
@@ -64,16 +62,21 @@ void mix() {
 }
 
 int main(int argc, char **argv) {
-    if (argc != 2) {
-        std::cerr << "Usage: " << argv[0] << " <input.txt>\n";
+    if (argc < 2) {
+        std::cerr << "Usage: " << argv[0] << " <input.txt> [decryption key]\n";
         std::exit(EXIT_FAILURE);
+    }
+
+    int64_t DECRYPTION_KEY{1};
+    if (argc == 3) {
+        DECRYPTION_KEY = std::stol(argv[2]);
     }
 
     SimpleParser scanner{argv[1]};
     int64_t index = 0;
     int64_t zeroPos = 0;
     while (!scanner.isEof()) {
-        data.push_back(scanner.getInt64());
+        data.push_back(scanner.getInt64() * DECRYPTION_KEY);
         if (data.back() == 0) {
             zeroPos = index;
         }
@@ -82,9 +85,16 @@ int main(int argc, char **argv) {
     }
     // printData();
     mix();
+    if (DECRYPTION_KEY != 1) {
+        for ([[maybe_unused]] const auto count : iota(0, 9)) {
+            mix();
+        }
+    }
     // printData();
     const auto d1000 = dataAt(1000 + position[zeroPos]);
     const auto d2000 = dataAt(2000 + position[zeroPos]);
     const auto d3000 = dataAt(3000 + position[zeroPos]);
-    fmt::print("{}+{}+{}={}\n", d1000, d2000, d3000, d1000 + d2000 + d3000);
+    fmt::print(
+        "Deciffering vector [{}, {}, {}]\nDecrypted grove coordinates are {}\n",
+        d1000, d2000, d3000, d1000 + d2000 + d3000);
 }
