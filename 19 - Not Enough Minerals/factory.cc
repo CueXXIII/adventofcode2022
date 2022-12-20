@@ -80,9 +80,8 @@ struct World {
     }
 
     bool supplyCompleted(const Blueprint &print) const {
-        return robots[ore] == print.maxBot[ore] and
-               robots[clay] == print.maxBot[clay] and
-               robots[obsidian] == print.maxBot[obsidian] and
+        return robots[ore] == print.costs[4] and
+               robots[obsidian] == print.costs[5] and
                canBuild(print, geode);
     }
 
