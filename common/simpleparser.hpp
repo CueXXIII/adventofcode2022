@@ -47,7 +47,9 @@ class SimpleParser {
     bool isEof() const;
 
     int64_t getInt64();
-    std::string getToken(const char terminate='\0');
+    std::string getToken(const char terminate = '\0');
+
+    char peekChar();
 
     void skipWhitespace();
     bool skipChar(const char);
@@ -60,7 +62,8 @@ SimpleParser::SimpleParser(std::ifstream &stream)
 }
 
 SimpleParser::SimpleParser(const char *infile)
-    : localStream(std::ifstream(infile)), in(localStream), buffer(""), pos(0), eof(false) {
+    : localStream(std::ifstream(infile)), in(localStream), buffer(""), pos(0),
+      eof(false) {
     bufferSaturate();
 }
 
@@ -76,7 +79,8 @@ int64_t SimpleParser::getInt64() {
 std::string SimpleParser::getToken(const char terminate) {
     skipWhitespace();
     auto end = pos;
-    while (end < buffer.size() && !std::isspace(buffer[end]) && buffer[end] != terminate) {
+    while (end < buffer.size() && !std::isspace(buffer[end]) &&
+           buffer[end] != terminate) {
         ++end;
     }
     const auto token = buffer.substr(pos, end - pos);
@@ -86,6 +90,14 @@ std::string SimpleParser::getToken(const char terminate) {
 }
 
 bool SimpleParser::isEof() const { return eof; }
+
+char SimpleParser::peekChar() {
+    skipWhitespace();
+    if (!eof) {
+        return buffer[pos];
+    }
+    return -1;
+}
 
 void SimpleParser::skipWhitespace() {
     while (!eof && std::isspace(buffer[pos])) {
