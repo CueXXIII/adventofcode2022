@@ -1,4 +1,4 @@
-SRC=move.cc
+SRC=move.cc move3d.cc
 
 CPPFLAGS=-I../common
 CXXFLAGS=-std=c++20 -O3 -flto=auto -Wall -Wextra -Wpedantic -Wconversion -Wshadow=local  -g -ggdb
