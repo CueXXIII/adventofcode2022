@@ -12,7 +12,6 @@
 using std::views::iota;
 
 struct Monkey {
-    std::string name{};
     char op{};
     std::string op1{};
     std::string op2{};
@@ -96,7 +95,7 @@ Monkey &Monkey::rcalc() {
 void yellingMonkeys(auto &yells, auto &waits) {
     while (true) {
         bool yelling = false;
-        for (auto it = waits.begin(); it != waits.end(); ) {
+        for (auto it = waits.begin(); it != waits.end();) {
             auto &[name, monkey] = *it;
             ++it;
             if (yells.contains(monkey.op1) and yells.contains(monkey.op2)) {
@@ -123,7 +122,7 @@ int main(int argc, char **argv) {
         const auto name = scanner.getToken(':');
         scanner.skipChar(':');
         if (std::isdigit(scanner.peekChar())) {
-            Monkey monkey{name};
+            Monkey monkey{};
             monkey.result = scanner.getInt64();
             yells1[name] = monkey;
             if (name != "humn") {
@@ -133,8 +132,8 @@ int main(int argc, char **argv) {
             const auto op1 = scanner.getToken();
             const auto op = scanner.getToken()[0];
             const auto op2 = scanner.getToken();
-            waits1[name] = Monkey(name, op, op1, op2);
-            waits2[name] = Monkey(name, op, op1, op2);
+            waits1[name] = Monkey(op, op1, op2);
+            waits2[name] = Monkey(op, op1, op2);
         }
     }
     waits2["root"].op = '=';
@@ -145,9 +144,11 @@ int main(int argc, char **argv) {
 
     // part 2
     yellingMonkeys(yells2, waits2);
-    waits2["humn"] = Monkey{"humn"};
+    Monkey humn{};
+    humn.op = 'x';
+    waits2["humn"] = humn;
     Monkey &trace = waits2["root"];
-    while (trace.name != "humn") {
+    while (!(trace.op == 'x')) {
         trace = trace.rcalc();
     }
     fmt::print("You yell: {}\n", waits2["humn"].result);
