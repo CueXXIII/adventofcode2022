@@ -18,10 +18,6 @@ static const std::vector<Vec2l> direction{{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
 
 // strange map, with border intervals in Vec2l
 std::unordered_map<Vec2l, char> stMap{};
-std::vector<Vec2l> stCols{};
-std::vector<Vec2l> stRows{};
-int64_t maxCol{0}; // stCols[x] = {minY,maxY}
-int64_t maxRow{0}; // stRows[y] = {minX,maxX}
 
 std::pair<Vec2l, int64_t> getNextPos(const Vec2l &myPos, const int64_t myFace) {
     const auto Q = 50; // cube size
@@ -116,6 +112,7 @@ std::pair<Vec2l, int64_t> getNextPosExample(const Vec2l &myPos, const int64_t my
     auto nextPos = myPos + direction[myFace];
     auto nextFace = myFace;
     // walk around the edge
+    // TODO check facing
     if (nextPos.y == 0) {
         // 1 -> 2
         nextPos.x = Q + 1 - (nextPos.x - 2 * Q) + 0 * Q;
@@ -152,6 +149,7 @@ int main(int argc, char **argv) {
         std::cerr << "Usage: " << argv[0] << " <input.txt>\n";
         std::exit(EXIT_FAILURE);
     }
+    const bool isExample = std::string{argv[1]} == "example.txt";
 
     std::ifstream infile{argv[1]};
     std::string line;
@@ -165,45 +163,14 @@ int main(int argc, char **argv) {
             if (line[i] != ' ') {
                 const int64_t col = i + 1;
                 stMap[{col, row}] = line[i];
-                maxCol = std::max(maxCol, col);
-            }
-        }
-        maxRow = row;
-    }
-    stCols.resize(maxCol + 1);
-    stRows.resize(maxRow + 1);
-
-    for (const auto y : iota(1, maxRow + 1)) {
-        for (auto x = 1; x <= maxCol; ++x) {
-            if (stMap.contains({x, y})) {
-                const auto minX = x;
-                while (stMap.contains({++x, y}))
-                    ;
-                const auto maxX = x - 1;
-                stRows[y] = {minX, maxX};
-                // fmt::print("[{}-{},{}]\n", minX,maxX, y);
-                break;
             }
         }
     }
 
-    for (const auto x : iota(1, maxCol + 1)) {
-        for (auto y = 1; y <= maxRow; ++y) {
-            if (stMap.contains({x, y})) {
-                const auto minY = y;
-                while (stMap.contains({x, ++y}))
-                    ;
-                const auto maxY = y - 1;
-                stCols[x] = {minY, maxY};
-                // fmt::print("[{},{}-{}]\n",x,minY,maxY);
-                break;
-            }
-        }
+    Vec2l myPos{1, 1};
+    while ((!stMap.contains(myPos)) or stMap[myPos] == '#') {
+        ++myPos.x;
     }
-
-    // fmt::print("Map {}x{}\n",maxCol,maxRow);
-
-    Vec2l myPos{stRows[1].x, 1};
     int64_t myFace = right;
 
     SimpleParser scanner{infile};
@@ -211,7 +178,8 @@ int main(int argc, char **argv) {
         const auto len = scanner.getInt64();
         // fmt::print("forward {}\n",len);
         for ([[maybe_unused]] const auto i : iota(0, len)) {
-            const auto [nextPos, nextFace] = getNextPos(myPos, myFace);
+            const auto [nextPos, nextFace] =
+                isExample ? getNextPosExample(myPos, myFace) : getNextPos(myPos, myFace);
             if (!stMap.contains(nextPos))
                 fmt::print("error {}\n", nextPos);
             if (stMap[nextPos] == '#') {
