@@ -11,9 +11,10 @@ if test -d "$puzzle"; then
 	exit 1
 fi
 
+mkdir "$puzzle"
+
 read -p "Program name: " obj
 
-mkdir "$puzzle"
 cd "$puzzle"
 
 <../Makefile perl -pe "s/SRC=/SRC=$obj.cc/" >Makefile
