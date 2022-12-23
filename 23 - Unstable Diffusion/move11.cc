@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <array>
+#include <cstdlib>
 #include <fmt/format.h>
 #include <fstream>
 #include <iostream>
@@ -9,6 +10,9 @@
 #include <vector>
 
 #include "vec2.hpp"
+
+// ==== set to true for animation ====
+constexpr bool visualize = false;
 
 using std::views::iota;
 
@@ -103,17 +107,35 @@ bool step(const int64_t no) {
 
 void drawMap(auto &coords) {
     auto [min, max] = boundingBox(coords);
+    if constexpr (visualize)
+        min = {-12 - 5, -13 - 5};
     for (const auto y : iota(min.y - 1, max.y + 2)) {
         for (const auto x : iota(min.x - 1, max.x + 2)) {
             if (coords.contains({x, y})) {
-                std::cout << '#';
+                if constexpr (visualize)
+                    std::cout << "##";
+                else
+                    std::cout << '#';
             } else {
-                std::cout << '.';
+                if constexpr (visualize)
+                    std::cout << "  ";
+                else
+                    std::cout << '.';
             }
         }
         std::cout << '\n';
     }
     std::cout << '\n';
+    // fmt::print("[{}, {}]\n",min,max);
+}
+
+void startAnimation() { fmt::print("\x1b[H\x1b[2J\x1b[3J"); }
+void startAnimFrame() { fmt::print("\x1b[H"); }
+void delayAnimation() { usleep(1000 * 1000 / 60); }
+void animateMap(auto &map) {
+    startAnimFrame();
+    drawMap(map);
+    delayAnimation();
 }
 
 int main(int argc, char **argv) {
@@ -135,19 +157,28 @@ int main(int argc, char **argv) {
         }
         ++mapY;
     }
-    fmt::print("== Initial State ==\n");
-    drawMap(map);
+    // fmt::print("== Initial State ==\n");
+    // drawMap(map);
+    if constexpr (visualize) {
+        startAnimation();
+        animateMap(map);
+        sleep(2);
+    }
     for (const auto i : iota(0, 10)) {
         step(i);
         // fmt::print("== End of Round {} ==\n", i + 1);
         // drawMap(map);
+        if constexpr (visualize)
+            animateMap(map);
     }
     const auto [min, max] = boundingBox(map);
     const auto tiles = (max.x - min.x + 1) * (max.y - min.y + 1) - elves.size();
-    fmt::print("The elves cover {} empty tiles after 10 rounds\n", tiles);
     int64_t i = 10;
     while (step(i)) {
+        if constexpr (visualize)
+            animateMap(map);
         ++i;
     }
+    fmt::print("The elves cover {} empty tiles after 10 rounds\n", tiles);
     fmt::print("The elves stood still in round {}\n", i + 1);
 }
