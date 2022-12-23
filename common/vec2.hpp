@@ -11,7 +11,7 @@ template <typename num> struct Vec2 {
     constexpr Vec2() noexcept = default;
     constexpr Vec2(const num &x, const num &y) noexcept : x(x), y(y) {}
 
-    bool operator==(const Vec2 &other) const {
+    constexpr bool operator==(const Vec2 &other) const {
         return x == other.x && y == other.y;
     }
     constexpr Vec2 &operator+=(const Vec2 &other) {
@@ -19,28 +19,35 @@ template <typename num> struct Vec2 {
         y += other.y;
         return *this;
     }
-    Vec2 &operator-=(const Vec2 &other) {
+    constexpr Vec2 &operator-=(const Vec2 &other) {
         x -= other.x;
         y -= other.y;
         return *this;
     }
-    Vec2 &operator*=(const num factor) {
+    constexpr Vec2 &operator*=(const num factor) {
         x *= factor;
         y *= factor;
         return *this;
     }
 
-    constexpr Vec2 operator+(const Vec2 &other) const { return Vec2{*this} += other; }
-    Vec2 operator-(const Vec2 &other) const { return Vec2{*this} -= other; }
-    Vec2 operator*(const num factor) const { return Vec2{*this} *= factor; }
+    constexpr Vec2 operator+(const Vec2 &other) const {
+        return Vec2{*this} += other;
+    }
+    constexpr Vec2 operator-(const Vec2 &other) const {
+        return Vec2{*this} -= other;
+    }
+    constexpr Vec2 operator*(const num factor) const {
+        return Vec2{*this} *= factor;
+    }
 
-    friend std::ostream &operator<<(std::ostream &out, const Vec2 &vec) {
+    friend constexpr std::ostream &operator<<(std::ostream &out,
+                                              const Vec2 &vec) {
         return out << "(" << vec.x << ", " << vec.y << ")";
     }
 };
 
 template <typename num> struct std::hash<Vec2<num>> {
-    std::size_t operator()(const Vec2<num> &v) const noexcept {
+    constexpr std::size_t operator()(const Vec2<num> &v) const noexcept {
         return std::hash<int64_t>{}((static_cast<int64_t>(v.x) << 16 ^
                                      static_cast<int64_t>(v.x) >> 48) ^
                                     static_cast<int64_t>(v.y));
@@ -59,7 +66,7 @@ template <typename num> struct fmt::formatter<Vec2<num>> {
         return it;
     }
     template <typename FormatContext>
-    auto format(const Vec2<num> &vec, FormatContext &ctx) const
+    constexpr auto format(const Vec2<num> &vec, FormatContext &ctx) const
         -> decltype(ctx.out()) {
         return fmt::format_to(ctx.out(), "({}, {})", vec.x, vec.y);
     }
@@ -79,7 +86,8 @@ concept isVec2Iterable =
     is_instantiation_of<Vec2, typename iter::value_type>::value;
 
 template <typename iterable>
-auto boundingBox(const iterable &container) requires isVec2Iterable<iterable> {
+constexpr auto
+boundingBox(const iterable &container) requires isVec2Iterable<iterable> {
     auto it = container.begin();
     auto min{*it};
     auto max{*it};

@@ -16,39 +16,46 @@ template <typename num> struct Vec3 {
         : x(x), y(y), z(z) {}
     constexpr Vec3(const Vec2<num> &v, num z) noexcept : x(v.x), y(v.y), z(z) {}
 
-    bool operator==(const Vec3 &other) const {
+    constexpr bool operator==(const Vec3 &other) const {
         return x == other.x && y == other.y && z == other.z;
     }
-    Vec3 &operator+=(const Vec3 &other) {
+    constexpr Vec3 &operator+=(const Vec3 &other) {
         x += other.x;
         y += other.y;
         z += other.z;
         return *this;
     }
-    Vec3 &operator-=(const Vec3 &other) {
+    constexpr Vec3 &operator-=(const Vec3 &other) {
         x -= other.x;
         y -= other.y;
         z -= other.z;
         return *this;
     }
-    Vec3 &operator*=(const num factor) {
+    constexpr Vec3 &operator*=(const num factor) {
         x *= factor;
         y *= factor;
         z *= factor;
         return *this;
     }
 
-    Vec3 operator+(const Vec3 &other) const { return Vec3{*this} += other; }
-    Vec3 operator-(const Vec3 &other) const { return Vec3{*this} -= other; }
-    Vec3 operator*(const num factor) const { return Vec3{*this} *= factor; }
+    constexpr Vec3 operator+(const Vec3 &other) const {
+        return Vec3{*this} += other;
+    }
+    constexpr Vec3 operator-(const Vec3 &other) const {
+        return Vec3{*this} -= other;
+    }
+    constexpr Vec3 operator*(const num factor) const {
+        return Vec3{*this} *= factor;
+    }
 
-    friend std::ostream &operator<<(std::ostream &out, const Vec3 &vec) {
+    friend constexpr std::ostream &operator<<(std::ostream &out,
+                                              const Vec3 &vec) {
         return out << "(" << vec.x << ", " << vec.y << ", " << vec.z << ")";
     }
 };
 
 template <typename num> struct std::hash<Vec3<num>> {
-    std::size_t operator()(const Vec3<num> &v) const noexcept {
+    constexpr std::size_t operator()(const Vec3<num> &v) const noexcept {
         return std::hash<num>{}(v.x) * 2 + std::hash<num>{}(v.y) * 1627 +
                std::hash<num>{}(v.z) * 2642257;
     }
@@ -66,7 +73,7 @@ template <typename num> struct fmt::formatter<Vec3<num>> {
         return it;
     }
     template <typename FormatContext>
-    auto format(const Vec3<num> &vec, FormatContext &ctx) const
+    constexpr auto format(const Vec3<num> &vec, FormatContext &ctx) const
         -> decltype(ctx.out()) {
         return fmt::format_to(ctx.out(), "({}, {}, {})", vec.x, vec.y, vec.z);
     }
@@ -81,7 +88,8 @@ concept isVec3Iterable =
     is_instantiation_of<Vec3, typename iter::value_type>::value;
 
 template <typename iterable>
-auto boundingBox(iterable &container) requires isVec3Iterable<iterable> {
+constexpr auto
+boundingBox(iterable &container) requires isVec3Iterable<iterable> {
     auto it = container.begin();
     auto min{*it};
     auto max{*it};
