@@ -14,7 +14,7 @@ template <typename num> struct Vec2 {
     bool operator==(const Vec2 &other) const {
         return x == other.x && y == other.y;
     }
-    Vec2 &operator+=(const Vec2 &other) {
+    constexpr Vec2 &operator+=(const Vec2 &other) {
         x += other.x;
         y += other.y;
         return *this;
@@ -30,7 +30,7 @@ template <typename num> struct Vec2 {
         return *this;
     }
 
-    Vec2 operator+(const Vec2 &other) const { return Vec2{*this} += other; }
+    constexpr Vec2 operator+(const Vec2 &other) const { return Vec2{*this} += other; }
     Vec2 operator-(const Vec2 &other) const { return Vec2{*this} -= other; }
     Vec2 operator*(const num factor) const { return Vec2{*this} *= factor; }
 
