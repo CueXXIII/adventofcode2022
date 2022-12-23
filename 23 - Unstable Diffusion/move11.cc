@@ -107,13 +107,13 @@ bool step(const int64_t no) {
 
 void drawMap(auto &coords) {
     auto [min, max] = boundingBox(coords);
-    if constexpr (visualize)
-        min = {-12 - 5, -13 - 5};
+    // if constexpr (visualize)
+    //     min = {-12 - 5, -13 - 5};
     for (const auto y : iota(min.y - 1, max.y + 2)) {
         for (const auto x : iota(min.x - 1, max.x + 2)) {
             if (coords.contains({x, y})) {
                 if constexpr (visualize)
-                    std::cout << "##";
+                    std::cout << "\x1b[7m  \x1b[0m";
                 else
                     std::cout << '#';
             } else {
@@ -131,7 +131,7 @@ void drawMap(auto &coords) {
 
 void startAnimation() { fmt::print("\x1b[H\x1b[2J\x1b[3J"); }
 void startAnimFrame() { fmt::print("\x1b[H"); }
-void delayAnimation() { usleep(1000 * 1000 / 60); }
+void delayAnimation() { usleep(1000 * 1000 / 5); }
 void animateMap(auto &map) {
     startAnimFrame();
     drawMap(map);
