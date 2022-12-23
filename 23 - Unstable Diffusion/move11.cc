@@ -74,26 +74,31 @@ struct Elf {
         }
     }
 
-    void move() {
+    bool move() {
+        bool moved = false;
         if (!moveBlocked.contains(moveTo)) {
+            moved = (pos != moveTo);
             pos = moveTo;
         }
         map.insert(pos);
+        return moved;
     }
 };
 
 std::vector<Elf> elves{};
 
-void step(const int64_t no) {
+bool step(const int64_t no) {
     moveDest.clear();
     moveBlocked.clear();
     for (auto &elf : elves) {
         elf.considerMove(no);
     }
     map.clear();
+    bool moved = false;
     for (auto &elf : elves) {
-        elf.move();
+        moved |= elf.move();
     }
+    return moved;
 }
 
 void drawMap(auto &coords) {
@@ -134,10 +139,15 @@ int main(int argc, char **argv) {
     drawMap(map);
     for (const auto i : iota(0, 10)) {
         step(i);
-        fmt::print("== End of Round {} ==\n", i + 1);
-        drawMap(map);
+        // fmt::print("== End of Round {} ==\n", i + 1);
+        // drawMap(map);
     }
     const auto [min, max] = boundingBox(map);
     const auto tiles = (max.x - min.x + 1) * (max.y - min.y + 1) - elves.size();
-    fmt::print("The elves cover {} empty tiles\n", tiles);
+    fmt::print("The elves cover {} empty tiles after 10 rounds\n", tiles);
+    int64_t i = 10;
+    while (step(i)) {
+        ++i;
+    }
+    fmt::print("The elves stood still in round {}\n", i + 1);
 }
