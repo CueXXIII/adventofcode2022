@@ -1,4 +1,3 @@
-#include <algorithm>
 #include <array>
 #include <fmt/format.h>
 #include <fstream>
@@ -7,9 +6,9 @@
 #include <queue>
 #include <ranges>
 #include <string>
-#include <unordered_set>
 #include <vector>
 
+#include "timeit.hpp"
 #include "utility.hpp"
 #include "vec2.hpp"
 
@@ -204,6 +203,8 @@ struct Plateau {
 };
 
 int main(int argc, char **argv) {
+    const auto startTime = timeNow();
+
     if (argc != 2) {
         std::cerr << "Usage: " << argv[0] << " <input.txt>\n";
         std::exit(EXIT_FAILURE);
@@ -231,12 +232,21 @@ int main(int argc, char **argv) {
             plat.setBlizzard({x, y}, winds[y][x + 1]);
         }
     }
+    const auto parse = timeNow();
 
     const auto way1 = plat.findPath(plat.exitUp, plat.exitDown, 0);
     fmt::print("Reached the exit after {} minutes\n", way1);
+    const auto part1 = timeNow();
+
     fmt::print("But we need to go back and get the snacks!\n");
     const auto way2 = plat.findPath(plat.exitDown, plat.exitUp, way1);
     fmt::print("The snacks are still cold (minute {})\n", way2);
     const auto way3 = plat.findPath(plat.exitUp, plat.exitDown, way2);
-    fmt::print("Now, that took {} minutes in the end\n", way3);
+    fmt::print("Now, that took {} minutes in the end\n\n", way3);
+    const auto part2 = timeNow();
+
+    fmt::print("Time for parsing: {:.4f} ms\n",
+               timeDiff(startTime, parse) * 1000);
+    fmt::print("Time for part 1: {:.4f} ms\n", timeDiff(parse, part1) * 1000);
+    fmt::print("Time for part 2: {:.4f} ms\n", timeDiff(part1, part2) * 1000);
 }
