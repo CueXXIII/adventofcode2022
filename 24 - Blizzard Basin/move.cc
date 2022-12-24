@@ -24,8 +24,6 @@ struct Plateau {
     // can I move back to my start pos?
     // yes, but that would be the same as just waiting there.
     Vec2l startPos{0, -1};
-    // Vec2l playerPos{0, -1};
-    //  stores the position one above the goal
     Vec2l goalPos{};
 
     std::vector<bool> blizzUp{};
@@ -44,7 +42,6 @@ struct Plateau {
         blizzDown.resize(width * height, false);
         blizzLeft.resize(width * height, false);
         blizzRight.resize(width * height, false);
-        goalPos.y = height - 1;
         blizzardCycle = std::lcm(width, height);
         visited.resize(width * height * blizzardCycle, false);
     }
@@ -148,9 +145,8 @@ struct Plateau {
 
     // see if dest is free and reserve it. returns free state
     bool registerMove(const Vec2l &pos, const int64_t min) {
-        if (pos == startPos) {
-            // don't stand here forever
-            return min < blizzardCycle;
+        if (pos == startPos or pos == goalPos) {
+            return true;
         }
         if (pos.x < 0 or pos.y < 0 or pos.x >= width or pos.y >= height) {
             return false;
@@ -166,7 +162,8 @@ struct Plateau {
     }
 
     // A*
-    int64_t findPath() {
+    // move out, but not where we came in
+    int64_t findPath(const Vec2l &initialPos, int64_t startTime) {
         // int64_t singleStepCount{0}; // for debugging
         struct State {
             Vec2l pos;
@@ -179,7 +176,7 @@ struct Plateau {
         };
         std::priority_queue<State, std::vector<State>, decltype(compareState)>
             frontier{compareState};
-        frontier.emplace(startPos, 0);
+        frontier.emplace(startPos, startTime);
         while (!frontier.empty()) {
             const auto current = frontier.top();
             frontier.pop();
@@ -189,11 +186,19 @@ struct Plateau {
                 fmt::print("A*: step {} queuesize {}\n", singleStepCount,
             frontier.size()); print(current.pos, current.min);
             } */
-            if (current.pos == goalPos) {
-                // goalPos is one above the goal, add move down
-                return current.min + 1;
+            if (current.pos == initialPos) {
+                // wait, but not forever
+                if(startTime+current.min+1 < blizzardCycle) {
+                    frontier.emplace(current.pos, current.min+1);
+                }
+            } else if (current.pos == startPos or current.pos == goalPos) {
+                return current.min;
             }
             for (const auto &dir : direction) {
+                if (current.pos + dir == initialPos) {
+                    // don't move back to the start, we can wait there
+                    continue;
+                }
                 if (registerMove(current.pos + dir, current.min + 1)) {
                     frontier.emplace(current.pos + dir, current.min + 1);
                 }
@@ -217,7 +222,6 @@ int main(int argc, char **argv) {
     std::getline(infile, line);
     plat.width = line.size() - 2;
     plat.startPos = {static_cast<int64_t>(line.find('.')) - 1, -1};
-    // plat.playerPos = plat.startPos;
     while (std::getline(infile, line)) {
         if (line[1] == '#' or line[2] == '#') {
             break;
@@ -233,5 +237,5 @@ int main(int argc, char **argv) {
         }
     }
 
-    fmt::print("Reached the exit in {} steps\n", plat.findPath());
+    fmt::print("Reached the exit in {} steps\n", plat.findPath(plat.startPos, 0));
 }
