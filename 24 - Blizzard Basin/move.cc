@@ -43,7 +43,6 @@ struct Plateau {
         blizzLeft.resize(width * height, false);
         blizzRight.resize(width * height, false);
         blizzardCycle = std::lcm(width, height);
-        visited.resize(width * height * blizzardCycle, false);
     }
 
     bool hasBDown(const Vec2l &pos, const int64_t minute) const {
@@ -176,20 +175,22 @@ struct Plateau {
         };
         std::priority_queue<State, std::vector<State>, decltype(compareState)>
             frontier{compareState};
-        frontier.emplace(startPos, startTime);
+        frontier.emplace(initialPos, startTime);
+        visited.clear();
+        visited.resize(width * height * blizzardCycle, false);
         while (!frontier.empty()) {
             const auto current = frontier.top();
             frontier.pop();
             /* // debug
             ++singleStepCount;
-            if((singleStepCount % 1000) == 0) {
+            if((singleStepCount % 1) == 0) {
                 fmt::print("A*: step {} queuesize {}\n", singleStepCount,
             frontier.size()); print(current.pos, current.min);
             } */
             if (current.pos == initialPos) {
                 // wait, but not forever
-                if(startTime+current.min+1 < blizzardCycle) {
-                    frontier.emplace(current.pos, current.min+1);
+                if (current.min + 1 - startTime < blizzardCycle) {
+                    frontier.emplace(current.pos, current.min + 1);
                 }
             } else if (current.pos == startPos or current.pos == goalPos) {
                 return current.min;
@@ -237,5 +238,11 @@ int main(int argc, char **argv) {
         }
     }
 
-    fmt::print("Reached the exit in {} steps\n", plat.findPath(plat.startPos, 0));
+    const auto way1 = plat.findPath(plat.startPos, 0);
+    fmt::print("Reached the exit after {} minutes\n", way1);
+    fmt::print("But we need to go back and get the snacks!\n");
+    const auto way2 = plat.findPath(plat.goalPos, way1);
+    fmt::print("The snacks are still cold (minute {})\n", way2);
+    const auto way3 = plat.findPath(plat.startPos, way2);
+    fmt::print("Now, that took {} minutes in the end\n", way3);
 }
