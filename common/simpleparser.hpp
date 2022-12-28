@@ -106,6 +106,7 @@ void SimpleParser::skipWhitespace() {
 }
 
 bool SimpleParser::skipChar(const char c) {
+    skipWhitespace();
     if (!eof && buffer[pos] == c) {
         bufferNextChar();
         return true;
