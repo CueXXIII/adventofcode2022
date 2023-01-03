@@ -48,6 +48,7 @@ class SimpleParser {
 
     int64_t getInt64();
     std::string getToken(const char terminate = '\0');
+    std::string getAlNum();
 
     char peekChar();
 
@@ -56,14 +57,12 @@ class SimpleParser {
     bool skipToken(const std::string &);
 };
 
-SimpleParser::SimpleParser(std::ifstream &stream)
-    : in(stream), buffer(""), pos(0), eof(false) {
+SimpleParser::SimpleParser(std::ifstream &stream) : in(stream), buffer(""), pos(0), eof(false) {
     bufferSaturate();
 }
 
 SimpleParser::SimpleParser(const char *infile)
-    : localStream(std::ifstream(infile)), in(localStream), buffer(""), pos(0),
-      eof(false) {
+    : localStream(std::ifstream(infile)), in(localStream), buffer(""), pos(0), eof(false) {
     bufferSaturate();
 }
 
@@ -79,11 +78,22 @@ int64_t SimpleParser::getInt64() {
 std::string SimpleParser::getToken(const char terminate) {
     skipWhitespace();
     auto end = pos;
-    while (end < buffer.size() && !std::isspace(buffer[end]) &&
-           buffer[end] != terminate) {
+    while (end < buffer.size() && !std::isspace(buffer[end]) && buffer[end] != terminate) {
         ++end;
     }
-    const auto token = buffer.substr(pos, end - pos);
+    auto token = buffer.substr(pos, end - pos);
+    pos = end;
+    bufferSaturate();
+    return token;
+}
+
+std::string SimpleParser::getAlNum() {
+    skipWhitespace();
+    auto end = pos;
+    while (end < buffer.size() && std::isalnum(buffer[end])) {
+        ++end;
+    }
+    auto token = buffer.substr(pos, end - pos);
     pos = end;
     bufferSaturate();
     return token;
