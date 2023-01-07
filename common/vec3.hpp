@@ -12,8 +12,7 @@ template <typename num> struct Vec3 {
     num z{};
 
     constexpr Vec3() noexcept = default;
-    constexpr Vec3(const num &x, const num &y, const num &z) noexcept
-        : x(x), y(y), z(z) {}
+    constexpr Vec3(const num &x, const num &y, const num &z) noexcept : x(x), y(y), z(z) {}
     constexpr Vec3(const Vec2<num> &v, num z) noexcept : x(v.x), y(v.y), z(z) {}
 
     constexpr bool operator==(const Vec3 &other) const {
@@ -37,19 +36,19 @@ template <typename num> struct Vec3 {
         z *= factor;
         return *this;
     }
-
-    constexpr Vec3 operator+(const Vec3 &other) const {
-        return Vec3{*this} += other;
-    }
-    constexpr Vec3 operator-(const Vec3 &other) const {
-        return Vec3{*this} -= other;
-    }
-    constexpr Vec3 operator*(const num factor) const {
-        return Vec3{*this} *= factor;
+    constexpr Vec3 &operator/=(const num divisor) {
+        x /= divisor;
+        y /= divisor;
+        z /= divisor;
+        return *this;
     }
 
-    friend constexpr std::ostream &operator<<(std::ostream &out,
-                                              const Vec3 &vec) {
+    constexpr Vec3 operator+(const Vec3 &other) const { return Vec3{*this} += other; }
+    constexpr Vec3 operator-(const Vec3 &other) const { return Vec3{*this} -= other; }
+    constexpr Vec3 operator*(const num factor) const { return Vec3{*this} *= factor; }
+    constexpr Vec3 operator/(const num divisor) const { return Vec3{*this} /= divisor; }
+
+    friend constexpr std::ostream &operator<<(std::ostream &out, const Vec3 &vec) {
         return out << "(" << vec.x << ", " << vec.y << ", " << vec.z << ")";
     }
 };
@@ -73,8 +72,7 @@ template <typename num> struct fmt::formatter<Vec3<num>> {
         return it;
     }
     template <typename FormatContext>
-    constexpr auto format(const Vec3<num> &vec, FormatContext &ctx) const
-        -> decltype(ctx.out()) {
+    constexpr auto format(const Vec3<num> &vec, FormatContext &ctx) const -> decltype(ctx.out()) {
         return fmt::format_to(ctx.out(), "({}, {}, {})", vec.x, vec.y, vec.z);
     }
 };
@@ -84,20 +82,16 @@ template <typename num> struct fmt::formatter<Vec3<num>> {
 // Return bounding box as std::pair<min, max> over an iterable container.
 // The container must not be empty.
 template <typename iter>
-concept isVec3Iterable =
-    is_instantiation_of<Vec3, typename iter::value_type>::value;
+concept isVec3Iterable = is_instantiation_of<Vec3, typename iter::value_type>::value;
 
 template <typename iterable>
-constexpr auto
-boundingBox(iterable &container) requires isVec3Iterable<iterable> {
+constexpr auto boundingBox(iterable &container) requires isVec3Iterable<iterable> {
     auto it = container.begin();
     auto min{*it};
     auto max{*it};
     while (++it != container.end()) {
-        min = {std::min(min.x, it->x), std::min(min.y, it->y),
-               std::min(min.z, it->z)};
-        max = {std::max(max.x, it->x), std::max(max.y, it->y),
-               std::max(max.z, it->z)};
+        min = {std::min(min.x, it->x), std::min(min.y, it->y), std::min(min.z, it->z)};
+        max = {std::max(max.x, it->x), std::max(max.y, it->y), std::max(max.z, it->z)};
     }
     return std::pair{min, max};
 }
