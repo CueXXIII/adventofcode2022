@@ -84,6 +84,9 @@ struct Intervals {
             if (next->first <= prev->second + 1) {
                 prev->second = std::max(prev->second, next->second);
                 next = intervals.erase(next);
+            } else if (prev->first < left) {
+                ++prev;
+                ++next;
             } else {
                 break;
             }
